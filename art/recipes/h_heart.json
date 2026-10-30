@@ -1,0 +1,38 @@
+{
+  "batch": "h_heart",
+  "note": "H, the Heart (art plan batch H), 2026-10-30. create_map_object in style matching never drew a building in batch C's three tests (see c_buildings.json _map_object_tests), so the Heart went straight to its STYLE.md fallback: one create_1_direction_object job at size 112 (10 generations, 4 candidates, palette = the 46 Apollo hexes, palette_name Apollo, view top-down, no style images), PixelLab review object 02ecb324-c171-4b31-864f-d7a366778f4f. All 4 frames are kept untouched in art/raw/h/candidates/frame_<i>.png; every frame came back 100% Apollo, no partial alpha, filling the whole 112 x 112. The pick was promoted with select_object_frames (tag h_heart) and saved as art/raw/h/b_heart_dormant.png, byte-identical to frame 1. b_heart (awake) is a free recolour of that same sprite in pixelart_workbench (art/edit/h/b_heart.workbench.json), replayable offline with 'node scripts/art/recolor.ts art/edit/h/edits.json' (checked pixel for pixel against the workbench download). Anchor fields (art plan issue 11; not read by art:build), [x, y, w, h] in final 112 x 112 sprite pixels (the art fills the canvas, so final = raw): _core = the core gem, _light = the awake light spot (the dormant Heart has none, like the code-drawn one).",
+  "_prompt": "description: enormous ancient machine sprite in high top-down 3/4 view, flat top and a thin south face, filling the whole frame, selective dark outline, lit from upper left, no ground shadow. Slots 0 and 2: 'the dormant Heart of the mountain, an enormous round ancient alien engine in high top-down 3/4 view, seen from above: concentric carved grey-green stone gear rings with dark green joints, dark navy glass conduits radiating outward to the edges, a dim dark blue glass core in the center, unlit, thin stone south face'. Slots 1 and 3: 'enormous ancient alien engine core in high top-down 3/4 view, seen from above: a huge round machine of stacked grey-green stone rings with carved gear teeth, four thick dark navy glass pipes running out to the four edges, a big unlit deep blue crystal core in the middle, dark green moss in the joints, thin stone south face'.",
+  "_why": "Frame 1 is the only candidate whose whole gear ring sits inside the canvas (teeth all round, a darker band under the teeth for its thickness), with a faceted #253a5e / #3c5e8b gem core and four #172038 glass conduits running out to the corners. Its glass colours are used nowhere in the stone, so the awake recolour is two exact colour maps that touch nothing else.",
+  "_rejected": {
+    "0": "eight dark spokes over carved rings, but the outer ring is cut flat by the left and top canvas edges.",
+    "2": "rings cut by the left edge, and one conduit kinks off to the top edge.",
+    "3": "a square-in-square star frame over the gear plus six curling corner pipes: the busiest of the four, and the gear is cut by the left edge."
+  },
+  "_spend": "10 generations (3880.10 -> 3890.10).",
+  "sprites": [
+    {
+      "name": "b_heart_dormant",
+      "src": "art/raw/h/b_heart_dormant.png",
+      "size": [112, 112],
+      "fit": "bottom",
+      "trim": true,
+      "_from": "H frame 1",
+      "_object": "56554d02-926e-418e-ad4e-8b7d8479f239",
+      "_core": [51, 35, 21, 22],
+      "_light": [],
+      "note": "Alien: a giant grey-green #819796 / #577277 stone gear with carved inner rings and #19332d / #25562e moss, a dim faceted #253a5e / #3c5e8b / #172038 gem core, four dark navy #172038 glass conduits out to the corners (they meet the chamber's conduits). Seen from high above, it reads as a mechanism set into the floor rather than a raised machine. Fills 112x112."
+    },
+    {
+      "name": "b_heart",
+      "src": "art/edit/h/b_heart.png",
+      "size": [112, 112],
+      "fit": "bottom",
+      "trim": true,
+      "_from": "art/raw/h/b_heart_dormant.png (H frame 1), recoloured",
+      "_fix": "node scripts/art/recolor.ts art/edit/h/edits.json (= pixelart_workbench image f2db78aa, art/edit/h/b_heart.workbench.json)",
+      "_core": [51, 35, 21, 22],
+      "light": [[62, 45, "#a4dddb", 8]], "_light": [[51, 35, 21, 22]],
+      "note": "The same Heart awake: in the gem #3c5e8b -> #ebede9, #253a5e -> #a4dddb, #172038 -> #73bed3 (a white-hot aqua core); in the four conduits #172038 -> #4f8fba, #253a5e -> #73bed3, #3c5e8b -> #a4dddb, #1e1d39 -> #3c5e8b (glowing glass, the tube's #10141f shadow band kept). 712 pixels changed; stone, moss and outline untouched."
+    }
+  ]
+}

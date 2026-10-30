@@ -1,0 +1,15 @@
+{
+  "note": "Review 3 A12: b_heart (awake), a free recolour of the re-rolled dormant Heart (art/raw/h2/b_heart_dormant.png, h2 frame 0, PixelLab object 59baacf8-c64b-4462-8249-b5f2b175be49). 'node scripts/art/recolor.ts art/edit/h2/edits.json' rebuilds art/edit/h2/b_heart.png. Coordinates are source pixels (100 x 100; art:build trims to the 87 x 88 art at [6, 6] and centres it on the 112 canvas, so sprite = source + 6). Both ops are flood fills inside the #090a14 linework, so they touch the gem and the ring channel and nothing else: the stone, the moss in the inner socket and the outline stay, so it is the same machine.",
+  "edits": [
+    {
+      "name": "b_heart",
+      "src": "art/raw/h2/b_heart_dormant.png",
+      "out": "art/edit/h2/b_heart.png",
+      "note": "Awake: the dim navy gem white-hot aqua, and the dark green glass channel round the gear (STYLE: Alien light is #a4dddb in #25562e glass) lit as a ring of aqua light.",
+      "ops": [
+        { "map": { "#3c5e8b": "#ebede9", "#819796": "#ebede9", "#394a50": "#a4dddb", "#202e37": "#73bed3", "#172038": "#4f8fba" }, "flood": [49, 49], "stop": ["#090a14"], "expect": 245, "note": "the core gem (17 x 18 at [41, 40]): its lit facet and 4 glints white-hot, the body pale aqua, the shaded facets down the crystal ramp" },
+        { "map": { "#25562e": "#a4dddb", "#19332d": "#73bed3" }, "flood": [43, 19], "stop": ["#090a14", "#819796", "#577277", "#394a50"], "expect": 345, "note": "the glass channel round the gear (radius 30-32): its #25562e core pale aqua, its #19332d edges cyan; #394a50 stops the fill, so the stone ring's shading beside the channel stays, and so do the 8 #151d28 / #10141f specks in it" }
+      ]
+    }
+  ]
+}

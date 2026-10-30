@@ -1,0 +1,15 @@
+{
+  "note": "b_heart (awake): a free recolour of the chosen dormant Heart (art/raw/h/b_heart_dormant.png, H frame 1), made in pixelart_workbench (image f2db78aa; change list in art/edit/h/b_heart.workbench.json) and recorded here in scripts/art/recolor.ts form so it replays offline: 'node scripts/art/recolor.ts art/edit/h/edits.json' rebuilds art/edit/h/b_heart.png pixel for pixel (checked against the workbench download). The four glass colours #172038 #253a5e #3c5e8b #1e1d39 occur only in the core gem and the four corner conduits (checked: none in the stone), so plain colour maps touch nothing else. The stone, moss and outlines are untouched, so it is the same machine.",
+  "edits": [
+    {
+      "name": "b_heart",
+      "src": "art/raw/h/b_heart_dormant.png",
+      "out": "art/edit/h/b_heart.png",
+      "note": "Awake: the core gem white-hot (#ebede9 facets on #a4dddb with #73bed3 dark facets), the conduits glowing on the crystal ramp.",
+      "ops": [
+        { "map": { "#3c5e8b": "#ebede9", "#253a5e": "#a4dddb", "#172038": "#73bed3" }, "region": [50, 34, 24, 24], "expect": 338, "note": "core gem" },
+        { "map": { "#172038": "#4f8fba", "#253a5e": "#73bed3", "#3c5e8b": "#a4dddb", "#1e1d39": "#3c5e8b" }, "expect": 374, "note": "the four corner glass conduits" }
+      ]
+    }
+  ]
+}

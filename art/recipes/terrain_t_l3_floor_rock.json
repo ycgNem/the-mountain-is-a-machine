@@ -1,0 +1,34 @@
+{
+  "batch": "terrain_t_l3_floor_rock",
+  "note": "PixelLab create_topdown_tileset ba14c439-58cf-41bb-844b-d828212d9fd8 (2026-10-30), transition_size 0.25, view high top-down. lower: deep blue stone cave floor of smooth slabs with thin navy cracks | upper: blue rock wall veined with glowing pale cyan crystal, mid-blue lit ridge along its top edge | transition: blue rock face with a mid-blue lip. Base tiles: lower cc76bc7d-5736-4039-b632-62055e31fca1, upper 017b4407-ce38-4de6-a886-37aae9da9046. Imported by scripts/art/tileset.ts on 2026-10-30.",
+  "_settings": "mode standard (1 generation), tile_size 16, view high top-down (standard always draws it), shape_style round, enhance false, detail 'medium detail', shading 'basic shading'. No palette: standard refuses palette/palette_name/max_colors ('work with mode=pro only'); art:build snaps to Apollo. transition_size 0.25, transition_description 'blue rock face with a mid-blue lip', boundary_amplitude 0.15, boundary_seed 2. Art plan prompts: lower 'deep blue stone cave floor of smooth slabs with thin navy cracks', upper 'blue rock wall veined with glowing pale cyan crystal, mid-blue lit ridge along its top edge'.",
+  "_rolls": "Only roll: ba14c439-58cf-41bb-844b-d828212d9fd8 (art plan prompt), kept with the _fix recolour. Floor #253a5e 1.73:1 (the art plan's issue-1 base), cyan #73bed3/#a4dddb lip. Base tiles: lower cc76bc7d-5736-4039-b632-62055e31fca1, upper 017b4407-ce38-4de6-a886-37aae9da9046.",
+  "terrain": [
+    {
+      "name": "t_l3_floor_rock",
+      "src": "art/edits/terrain/t_l3_floor_rock.png",
+      "variantShare": 0.25,
+      "_variantShare": "Review 3 A3: one plain tile in four from t_l3_floor_rock_v1-v3 (redo.json): a 5-6 px #172038 crack and three #3c5e8b specks on the flat #253a5e floor, as the Fungal floor's variants do.",
+      "_fix": {"from":"art/raw/terrain/t_l3_floor_rock.png","barrier":["#a4dddb","#73bed3","#4f8fba"],"rules":["upper:#253a5e=#172038","upper:#1e1d39=#10141f","upper:#402751=#172038","upper:#577277=#3c5e8b","lower:#577277=#3c5e8b","lower:#402751=#253a5e","lower:#1e1d39=#172038"],"why":"The raw wall (#242765, 1.46:1) was darker than the raw floor (#2a358d, 1.87:1) but both snapped to #253a5e: the wall goes to STYLE's L3 wall #172038 with #10141f cracks. The floor stays flat #253a5e (its faint slab joints stay merged; shown, they draw a regular 8 px grid). Stray #577277/#402751 go to the layer's blues."},
+      "tile": 16,
+      "tiles": [
+        { "rect": [0, 0], "corners": [0, 0, 0, 0] },
+        { "rect": [16, 0], "corners": [0, 0, 0, 1] },
+        { "rect": [32, 0], "corners": [0, 0, 1, 0] },
+        { "rect": [48, 0], "corners": [0, 0, 1, 1] },
+        { "rect": [0, 16], "corners": [0, 1, 0, 0] },
+        { "rect": [16, 16], "corners": [0, 1, 0, 1] },
+        { "rect": [32, 16], "corners": [0, 1, 1, 0] },
+        { "rect": [48, 16], "corners": [0, 1, 1, 1] },
+        { "rect": [0, 32], "corners": [1, 0, 0, 0] },
+        { "rect": [16, 32], "corners": [1, 0, 0, 1] },
+        { "rect": [32, 32], "corners": [1, 0, 1, 0] },
+        { "rect": [48, 32], "corners": [1, 0, 1, 1] },
+        { "rect": [0, 48], "corners": [1, 1, 0, 0] },
+        { "rect": [16, 48], "corners": [1, 1, 0, 1] },
+        { "rect": [32, 48], "corners": [1, 1, 1, 0] },
+        { "rect": [48, 48], "corners": [1, 1, 1, 1] }
+      ]
+    }
+  ]
+}

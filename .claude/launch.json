@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mountain-dev",
+      "runtimeExecutable": "C:\\Users\\jacks\\tools\\node-v22.20.0-win-x64\\npx.cmd",
+      "runtimeArgs": ["vite", "--port", "5190", "--strictPort"],
+      "port": 5190
+    }
+  ]
+}

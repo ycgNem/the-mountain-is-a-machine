@@ -1,0 +1,29 @@
+{
+  "name": "the-mountain-is-a-machine",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A pixel-art factory game about industrializing a mountain that hums.",
+  "author": "ycgNem",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run typecheck && vite build",
+    "release": "npm run build && node scripts/release.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "shots": "node e2e/shots.ts",
+    "art:build": "node scripts/art/build.ts",
+    "art:sheet": "node scripts/art/sheet.ts",
+    "art:coverage": "node scripts/art/coverage.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/pngjs": "^6.0.5",
+    "playwright": "^1.48.2",
+    "pngjs": "^7.0.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.4"
+  }
+}

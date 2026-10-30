@@ -1,0 +1,34 @@
+{
+  "batch": "terrain_t_l1_floor_rock",
+  "note": "PixelLab create_topdown_tileset df28bbb8-63a9-4d99-8400-12699978fcbf (2026-10-30), transition_size 0.25, view high top-down. lower: dark umber cave floor of packed earth with tan speckles | upper: rough brown rock wall with a lit tan ridge along its top edge and dark maroon-brown crevices | transition: brown rock face with a lit tan lip. Base tiles: lower 2ad8e04b-4127-40a4-8add-82c3e9133942, upper 5dd14ee1-8a38-4702-aa9e-bfda123ccd75. Imported by scripts/art/tileset.ts on 2026-10-30.",
+  "_settings": "mode standard (1 generation), tile_size 16, shape_style round, enhance false, detail 'medium detail', shading 'basic shading', boundary_amplitude 0.15, boundary_seed 2, no palette (standard takes none; art:build snaps to Apollo, 2.4% of pixels moved far). Reuse these for the other nine sets.",
+  "_pilot": "Batch T pilot winner (tag std2): standard mode for all ten sets. Rejected: pro e84f34ab-4127-4742-bee4-dba4244d7bde (15 generations; floor #341c27 at 1.26:1 fails issue 1, no lit lip, a black dot and diagonal hatch repeat every 16 px, floor vanishes under darkness), standard 3514049e-da8c-4328-953a-d821297b1a8e (std1: slate #394a50 floor, same colour as the belt), standard d44918d6-f7e9-4522-9e8d-c1d0d467863b (std3: boundary_amplitude 0; values inverted, dark #4d2b32 floor under light rock). Candidates kept in art/raw/terrain/t_l1_floor_rock.<pro|std1|std2|std3>.*; mocks art/out/mock/l1_cave_<tag>*.png and l1_pilot_compare-*.png.",
+  "terrain": [
+    {
+      "name": "t_l1_floor_rock",
+      "src": "art/edits/terrain/t_l1_floor_rock.png",
+      "variantShare": 0.25,
+      "_variantShare": "Review 3 A3: one plain tile in four from t_l1_floor_rock_v1-v3 (redo.json, made from this fixed sheet): a 5-6 px #4d2b32 crack and three or four #ad7757 specks on the flat #7a4841 floor.",
+      "_fix": {"from":"art/raw/terrain/t_l1_floor_rock.png","rules":["#e7d5b3=#c09473","#e8c170=#ad7757","#de9e41=#ad7757","#d7b594=#c09473","#090a14=#341c27"],"why":"Review 3 A11: the lip came back cream and gold (#e7d5b3 407 px at 5.15:1 on the #7a4841 floor, #e8c170 152 px, the money and selection colour): the brightest line on the layer. To STYLE's earth ramp, #c09473 tops (2.73:1) over #ad7757 (1.96:1); its #de9e41 and #d7b594 strays follow, and the one #090a14 pixel becomes #341c27. These colours occur only in the lip (the floor is flat #7a4841, the wall maroon and plum), so no region or barrier is needed. 588 px."},
+      "tile": 16,
+      "tiles": [
+        { "rect": [0, 0], "corners": [0, 0, 0, 0] },
+        { "rect": [16, 0], "corners": [0, 0, 0, 1] },
+        { "rect": [32, 0], "corners": [0, 0, 1, 0] },
+        { "rect": [48, 0], "corners": [0, 0, 1, 1] },
+        { "rect": [0, 16], "corners": [0, 1, 0, 0] },
+        { "rect": [16, 16], "corners": [0, 1, 0, 1] },
+        { "rect": [32, 16], "corners": [0, 1, 1, 0] },
+        { "rect": [48, 16], "corners": [0, 1, 1, 1] },
+        { "rect": [0, 32], "corners": [1, 0, 0, 0] },
+        { "rect": [16, 32], "corners": [1, 0, 0, 1] },
+        { "rect": [32, 32], "corners": [1, 0, 1, 0] },
+        { "rect": [48, 32], "corners": [1, 0, 1, 1] },
+        { "rect": [0, 48], "corners": [1, 1, 0, 0] },
+        { "rect": [16, 48], "corners": [1, 1, 0, 1] },
+        { "rect": [32, 48], "corners": [1, 1, 1, 0] },
+        { "rect": [48, 48], "corners": [1, 1, 1, 1] }
+      ]
+    }
+  ]
+}

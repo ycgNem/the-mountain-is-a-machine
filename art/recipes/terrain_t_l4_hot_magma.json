@@ -1,0 +1,34 @@
+{
+  "batch": "terrain_t_l4_hot_magma",
+  "note": "PixelLab create_topdown_tileset 61ea594e-4a0a-47a7-827c-9f862082b95d (2026-10-30), transition_size 0, view high top-down. lower: hot ground of dark maroon cracked basalt, a web of thin glowing red-orange heat cracks across the whole surface | upper: pool of bright orange molten lava, glowing liquid with yellow swirls and a few white-hot spots. Base tiles: lower ccb47f08-47e0-49de-9f1d-79d69fddb485, upper 4ed20136-cdab-401d-85c2-dde145a65c17. Imported by scripts/art/tileset.ts on 2026-10-30.",
+  "_settings": "mode standard (1 generation), tile_size 16, view high top-down (standard always draws it), shape_style round, enhance false, detail 'medium detail', shading 'basic shading'. No palette: standard refuses palette/palette_name/max_colors ('work with mode=pro only'); art:build snaps to Apollo. transition_size 0, boundary_amplitude 0.15, boundary_seed 2, lower_base_tile_id ccb47f08-47e0-49de-9f1d-79d69fddb485 (t_l4_floor_hot upper) with t_l4_floor_hot's upper wording as the lower. Retry upper: 'pool of bright orange molten lava, glowing liquid with yellow swirls and a few white-hot spots'.",
+  "_rolls": "Kept the retry 61ea594e-4a0a-47a7-827c-9f862082b95d. Rejected c1b8a70e-42da-4c55-ad7e-e16b308d836d (art plan upper 'flowing magma, bright orange and red-orange with pale yellow and white-hot spots and dark crust flecks'): the magma interior came back as the maroon hot ground with lava only along the border, so a 2-cell channel read as two lava streams. Raw rolls: art/raw/terrain/t_l4_hot_magma.r1.* and .r2.*. Base tiles: lower ccb47f08-47e0-49de-9f1d-79d69fddb485, upper 4ed20136-cdab-401d-85c2-dde145a65c17.",
+  "terrain": [
+    {
+      "name": "t_l4_hot_magma",
+      "src": "art/edits/terrain/t_l4_hot_magma.png",
+      "variantShare": 0.75,
+      "_variantShare": "Review 3 A3: three in four plain magma tiles (tile 15) come from t_l4_hot_magma_v1-v3 (redo.json), whose swirls come from other parts of this sheet and whose single white-hot pixel sits somewhere else in each; a wallpaper texture, so a high share. Tile 0 (hot ground) is never drawn from this set (the magma pass skips all-lower tiles) and stays equal to t_l4_floor_hot's tile 15.",
+      "_fix": {"from":"art/raw/terrain/t_l4_hot_magma.png","rules":["#da863e=#cf573c","#e8c170=#da863e","#de9e41=#da863e","#d0da91=#e8c170"],"pixels":[[59,55,"#ebede9","#da863e"]],"pixels_why":"Review 3 A3: tile 15's one white-hot pixel (tile x 11, y 7) repeated at the same spot on every all-magma tile, a 16 px grid of white sparks over every pool; it becomes the swirl colour, leaving the tile's two #e8c170 px. Each variant carries one white-hot pixel of its own instead. Edge tiles keep theirs (they always come from this sheet).","why":"The saturated raw lava snapped mostly to #da863e with #e8c170 swirls; shifted one step down to STYLE's magma accent (#cf573c base, #da863e swirls, #e8c170/#ebede9 only in the hottest spots) so heat machines' #e8c170/#ebede9 cores outshine it. Hot-ground colours are untouched: tile 0 equals t_l4_floor_hot's tile 15 pixel for pixel."},
+      "tile": 16,
+      "tiles": [
+        { "rect": [0, 0], "corners": [0, 0, 0, 0] },
+        { "rect": [16, 0], "corners": [0, 0, 0, 1] },
+        { "rect": [32, 0], "corners": [0, 0, 1, 0] },
+        { "rect": [48, 0], "corners": [0, 0, 1, 1] },
+        { "rect": [0, 16], "corners": [0, 1, 0, 0] },
+        { "rect": [16, 16], "corners": [0, 1, 0, 1] },
+        { "rect": [32, 16], "corners": [0, 1, 1, 0] },
+        { "rect": [48, 16], "corners": [0, 1, 1, 1] },
+        { "rect": [0, 32], "corners": [1, 0, 0, 0] },
+        { "rect": [16, 32], "corners": [1, 0, 0, 1] },
+        { "rect": [32, 32], "corners": [1, 0, 1, 0] },
+        { "rect": [48, 32], "corners": [1, 0, 1, 1] },
+        { "rect": [0, 48], "corners": [1, 1, 0, 0] },
+        { "rect": [16, 48], "corners": [1, 1, 0, 1] },
+        { "rect": [32, 48], "corners": [1, 1, 1, 0] },
+        { "rect": [48, 48], "corners": [1, 1, 1, 1] }
+      ]
+    }
+  ]
+}

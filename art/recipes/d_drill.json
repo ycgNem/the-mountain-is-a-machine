@@ -1,0 +1,45 @@
+{
+  "batch": "d_drill",
+  "note": "D, the Drill (art plan batch D), 2026-10-30. create_map_object in style matching never drew a building in batch C's three tests (see c_buildings.json _map_object_tests), so the Drill went straight to its STYLE.md fallback: one create_1_direction_object job at size 80 (15 generations, 16 candidates, palette = the 46 Apollo hexes, palette_name Apollo, view top-down, no style images), PixelLab review object c46f972d-903e-4565-8d07-00d267e0030c. All 16 frames are kept untouched in art/raw/d/candidates/frame_<i>.png (labels in art/raw/d/labels.json); every frame came back 100% Apollo, no partial alpha, bodies 74-79 px. The pick was promoted with select_object_frames (tag d_drill) and saved as art/raw/d/b_drill.png, byte-identical to frame 10. b_drill_broken is a free hand edit of that same sprite in pixelart_workbench (art/edit/d/b_drill_broken.workbench.json), replayable offline with 'node scripts/art/recolor.ts art/edit/d/edits.json' (checked pixel for pixel against the workbench download). Anchor fields (art plan issue 11; not read by art:build), [x, y, w, h] in final 80 x 80 sprite pixels (the 75x78 body sits at [2, 2], i.e. raw y + 1): _light = the work lamps, _bore = the round bore for the code-drawn spinning bit. The game shows b_drill_broken on the Surface (layer 0) and b_drill on the bore sites below (Renderer.spriteName).",
+  "_prompt": "description: giant machine sprite in high top-down 3/4 view, flat top and a thin south face, base filling the whole frame edge to edge, selective dark outline, lit from upper left, no ground shadow. Four item_descriptions, each repeated (slots 0,4,8,12,15 = A; 1,5,9,13 = B; 2,6,10 = C; 3,7,11,14 = D).",
+  "_slots": {
+    "A rig": "giant excavation drill rig in high top-down 3/4 view, seen from above: heavy dark steel square frame with company-yellow deck panels, a massive round dark bore hole in the center of the top surface ringed by steel cutting teeth, brass motor housings at the four corners, pale-gold work lamps, yellow-and-black hazard stripes on the outer rim, thin plain steel south face",
+    "B deck": "huge mining drill platform in high top-down 3/4 view, seen from above: square steel deck with a big round black bore hole in the middle ringed by a toothed steel collar, company-yellow engine housings and short exhaust stacks around it, hazard-striped rim, pale-gold work lamps, thin plain steel south face",
+    "C derrick (PICK: frame 10)": "giant drill rig in high top-down 3/4 view, seen from above: open steel lattice derrick tower standing over a massive round dark bore in the center, company-yellow machinery housings on both sides, brass gears and copper pipes, hazard stripes along the edges, pale-gold lamps, thin plain steel south face",
+    "D borer": "colossal boring machine in high top-down 3/4 view, seen from above: round dark bore shaft in the middle of a square company-yellow and dark steel platform, big steel cutting teeth around the bore rim, two brass motor drums, cable reels, pale-gold work lamps on posts, thin plain steel south face"
+  },
+  "_why": "Frame 10, the lattice derrick over a round bore between two company-yellow housings with a work lamp on a post at each side, is the same rig the title art shows (title_finish.ts: a lattice derrick on a #de9e41 housing with a round bore) and the code-drawn b_drill_broken, so the Drill keeps one identity from the title screen to the bore site. Its derrick silhouette never reads as a giant b_miner, which the A rigs (a dark round hole in a square with a hazard rim) did.",
+  "_rejected": {
+    "0, 4, 8, 12, 15 A rig": "clean and symmetric with the widest open bores (8 even has a ring of cutting teeth), but at 1x they read as an enlarged b_miner: same square, same central hole, same striped rim.",
+    "1, 5, 9, 13 B deck": "mostly dark steel deck: little company yellow, the least readable on the ochre Surface ground.",
+    "2, 6 C derrick": "2 is close to 10 with one lamp; 6 swaps the yellow housing for a copper tank (less Company).",
+    "3, 7, 11, 14 D borer": "busy machinery around a raised collar; no derrick, so the title-art identity is lost."
+  },
+  "_spend": "15 generations (3865.10 -> 3880.10).",
+  "sprites": [
+    {
+      "name": "b_drill",
+      "src": "art/raw/d/b_drill.png",
+      "size": [80, 80],
+      "fit": "bottom",
+      "trim": true,
+      "_from": "D frame 10",
+      "_object": "6c745ce1-f653-41b6-b355-4e797078b8b1",
+      "light": [[9, 25, "#e8c170", 4], [69, 25, "#e8c170", 4]], "_light": [[8, 24, 4, 3], [66, 23, 4, 4]],
+      "_bore": [26, 48, 27, 15],
+      "note": "Lattice derrick (crown block on top, drill string down its middle) over a round bore; #de9e41 / #e8c170 housings left and right, brass gear and copper pipes at the front, #de9e41 / #151d28 hazard rim, two pale-gold work lamps on posts (the light spots). The bore is the #090a14 ellipse at the derrick's foot, 27 px wide and 15 px deep (a round 27 px bore in 3/4 view), centre (39, 55). Body 75x78 at [2, 2]."
+    },
+    {
+      "name": "b_drill_broken",
+      "src": "art/edit/d/b_drill_broken.png",
+      "size": [80, 80],
+      "fit": "bottom",
+      "trim": true,
+      "_from": "art/raw/d/b_drill.png (D frame 10), hand-edited",
+      "_fix": "node scripts/art/recolor.ts art/edit/d/edits.json (= pixelart_workbench images 904170f3 -> 80aba3d5 -> 8aa45c4b, art/edit/d/b_drill_broken.workbench.json)",
+      "_light": [],
+      "_bore": [26, 48, 27, 15],
+      "note": "The same rig, broken and idle, standing upright: both work lamps dead (#577277 / #394a50 glass), a #341c27 crack with chipped edges down the left housing, #7a4841 / #884b2b rust streaks and patches on both housings and the deck, the drill string snapped inside the derrick (2-row gap, rusty ends), steel tooth shards on the deck, the crown block's top-right corner broken off. 101 pixels changed, all Apollo; same body box, so it swaps in place."
+    }
+  ]
+}

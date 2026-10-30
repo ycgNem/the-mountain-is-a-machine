@@ -1,0 +1,12 @@
+0	iron_ingot	--map #3c5e8b=#7a4841
+13	reinforced_plate	--map #a53030=#de9e41,#25562e=#be772b,#602c2c=#884b2b,#75a743=#be772b,#4d2b32=#884b2b,#7a4841=#be772b
+16	coal	--map #394a50=#819796
+21	steel_beam	
+26	motor	
+27	sapstone	
+63	glowcap	
+35	mycelium	
+41	cobalt_drill_head	
+44	cut_crystal	--map #172038=#3c5e8b,#253a5e=#3c5e8b
+48	cold_ember_ingot	--map #577277=#819796,#394a50=#202e37,#202e37=#151d28,#341c27=#752438
+55	heat_shield	--map #cf573c=#da863e,#253a5e=#394a50,#19332d=#202e37

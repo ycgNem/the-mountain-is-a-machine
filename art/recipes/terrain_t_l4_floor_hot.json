@@ -1,0 +1,32 @@
+{
+  "batch": "terrain_t_l4_floor_hot",
+  "note": "PixelLab create_topdown_tileset 4e372d21-bb4e-4991-ad9b-966f06ab1999 (2026-10-30), transition_size 0, view high top-down. lower: black basalt cave floor, dark slate with faint hexagonal cracks | upper: hot ground of dark maroon cracked basalt, a web of thin glowing red-orange heat cracks across the whole surface. Base tiles: lower 5369416d-57b4-46c6-b098-e21764503d20, upper ccb47f08-47e0-49de-9f1d-79d69fddb485. Imported by scripts/art/tileset.ts on 2026-10-30.",
+  "_settings": "mode standard (1 generation), tile_size 16, view high top-down (standard always draws it), shape_style round, enhance false, detail 'medium detail', shading 'basic shading'. No palette: standard refuses palette/palette_name/max_colors ('work with mode=pro only'); art:build snaps to Apollo. transition_size 0, boundary_amplitude 0.15, boundary_seed 2, lower_base_tile_id 5369416d-57b4-46c6-b098-e21764503d20 (t_l4_floor_rock lower) with its lower wording. Retry upper: 'hot ground of dark maroon cracked basalt, a web of thin glowing red-orange heat cracks across the whole surface'.",
+  "_rolls": "Kept the retry 4e372d21-bb4e-4991-ad9b-966f06ab1999: maroon #602c2c ground under a #a53030/#cf573c crack web, still red at the 0.85 darkness band. Rejected c42254a8-5992-4c71-9c53-9441c7dc9314 (art plan upper 'cracked basalt hot ground, dark slate split by thin glowing red-orange heat cracks'): the hot ground came back identical to the floor and only its border glowed. Raw rolls: art/raw/terrain/t_l4_floor_hot.r1.* and .r2.*. Base tiles: lower 5369416d-57b4-46c6-b098-e21764503d20, upper ccb47f08-47e0-49de-9f1d-79d69fddb485 (t_l4_hot_magma chains from it).",
+  "terrain": [
+    {
+      "name": "t_l4_floor_hot",
+      "src": "art/edits/terrain/t_l4_floor_hot.png",
+      "_fix": {"from":"art/raw/terrain/t_l4_floor_hot.png","rules":["#1e1d39=#151d28"],"why":"The same floor-crack recolour as t_l4_floor_rock: tile 0 equals t_l4_floor_rock's pixel for pixel."},
+      "tile": 16,
+      "tiles": [
+        { "rect": [0, 0], "corners": [0, 0, 0, 0] },
+        { "rect": [16, 0], "corners": [0, 0, 0, 1] },
+        { "rect": [32, 0], "corners": [0, 0, 1, 0] },
+        { "rect": [48, 0], "corners": [0, 0, 1, 1] },
+        { "rect": [0, 16], "corners": [0, 1, 0, 0] },
+        { "rect": [16, 16], "corners": [0, 1, 0, 1] },
+        { "rect": [32, 16], "corners": [0, 1, 1, 0] },
+        { "rect": [48, 16], "corners": [0, 1, 1, 1] },
+        { "rect": [0, 32], "corners": [1, 0, 0, 0] },
+        { "rect": [16, 32], "corners": [1, 0, 0, 1] },
+        { "rect": [32, 32], "corners": [1, 0, 1, 0] },
+        { "rect": [48, 32], "corners": [1, 0, 1, 1] },
+        { "rect": [0, 48], "corners": [1, 1, 0, 0] },
+        { "rect": [16, 48], "corners": [1, 1, 0, 1] },
+        { "rect": [32, 48], "corners": [1, 1, 1, 0] },
+        { "rect": [48, 48], "corners": [1, 1, 1, 1] }
+      ]
+    }
+  ]
+}

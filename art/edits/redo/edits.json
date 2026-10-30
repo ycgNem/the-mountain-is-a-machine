@@ -1,0 +1,496 @@
+{
+  "note": "Redo pass after art review 2 (2026-10-30): the art director's free fixes, items 1-13 of the redo list. Raw downloads stay untouched; 'node scripts/art/recolor.ts art/edits/redo/edits.json' rebuilds every PNG here. Coordinates are source pixels. Recipe: art/recipes/redo.json. Review 3 (2026-10-30) added the A1 crate planks, the A13 decor fixes and the A3 floor variants of the Surface, the Shallows, the Crystal Depths and the magma; the terrain variants read the fixed sheets in art/edits/terrain/, so replay terrain-fix.ts --recipe on those recipes first.",
+  "edits": [
+    {
+      "name": "x_l0_crate_stack",
+      "src": "art/raw/m1/x_l0_crate_stack.png",
+      "out": "art/edits/redo/x_l0_crate_stack.png",
+      "note": "Redo 1: the loudest thing on the Surface. The #090a14 outline (137 px, 20% of the sprite) becomes the soft #4d2b32 and the bright #d7b594 plank tops the floor's #c09473, so it sits back like the bush and grass. The one #e7d5b3 sparkle goes with the tops; the four strays from other ramps (#19332d, #819796) join the crate's own browns. Review 3 A1 (op 2): the planks from brass #884b2b to wood #ad7757.",
+      "ops": [
+        { "map": { "#090a14": "#4d2b32", "#d7b594": "#c09473", "#e7d5b3": "#c09473" }, "expect": 171 },
+        { "pixels": [[22, 4, "#19332d", "#341c27"], [7, 28, "#19332d", "#341c27"], [10, 28, "#19332d", "#341c27"], [29, 25, "#819796", "#7a4841"]] },
+        { "map": { "#884b2b": "#ad7757" }, "expect": 217, "note": "Review 3 A1: the 217 px of plank faces from the brass/hazard ramp (#884b2b, 2.50:1 on the #c09473 floor) to the wood #ad7757 STYLE gives decor crates (1.39:1, like the bush and grass), a separate op so the first one keeps its count." }
+      ]
+    },
+    {
+      "name": "d_copper_ore_1",
+      "src": "art/raw/g2/d_copper_ore_1.png",
+      "out": "art/edits/redo/d_copper_ore_1.png",
+      "note": "Redo 2: copper had 0 px at 3:1 on the Shallows floor #7a4841. Three vein-core px #da863e to #e8c170 (the top of copper's ramp, 4.34:1 on #7a4841): both px of the upper S-vein and the lit end of the lower one; one #da863e stays so the vein still reads copper-orange.",
+      "ops": [
+        { "pixels": [[9, 5, "#da863e", "#e8c170"], [8, 6, "#da863e", "#e8c170"], [4, 7, "#da863e", "#e8c170"]] }
+      ]
+    },
+    {
+      "name": "d_copper_ore_2",
+      "src": "art/raw/g1/d_copper_ore_2.png",
+      "out": "art/edits/redo/d_copper_ore_2.png",
+      "note": "Redo 2: the four core px of the diagonal vein #da863e to #e8c170; its two ends and the chips stay copper-orange.",
+      "ops": [
+        { "pixels": [[9, 6, "#da863e", "#e8c170"], [8, 7, "#da863e", "#e8c170"], [7, 8, "#da863e", "#e8c170"], [6, 9, "#da863e", "#e8c170"]] }
+      ]
+    },
+    {
+      "name": "d_copper_ore_3",
+      "src": "art/raw/g1/d_copper_ore_3.png",
+      "out": "art/edits/redo/d_copper_ore_3.png",
+      "note": "Redo 2: one fleck per copper rock #da863e to #e8c170 (the upper-left px of each fleck); the lower px of each two-px fleck stays copper-orange.",
+      "ops": [
+        { "pixels": [[12, 3, "#da863e", "#e8c170"], [3, 12, "#da863e", "#e8c170"], [12, 12, "#da863e", "#e8c170"]] }
+      ]
+    },
+    {
+      "name": "d_iron_ore_2",
+      "src": "art/raw/g1/d_iron_ore_2.png",
+      "out": "art/edits/redo/d_iron_ore_2.png",
+      "note": "Redo 3: 0 px at 3:1 on the Shallows floor (#819796 is only 2.40:1 on umber). Four lit px along the lump's upper-left rim to #a8b5b2 (3.50:1 on #7a4841, 4.37:1 on #394a50).",
+      "ops": [
+        { "pixels": [[5, 5, "#819796", "#a8b5b2"], [6, 4, "#577277", "#a8b5b2"], [7, 4, "#577277", "#a8b5b2"], [8, 4, "#819796", "#a8b5b2"]] }
+      ]
+    },
+    {
+      "name": "d_iron_ore_3",
+      "src": "art/raw/g1/d_iron_ore_3.png",
+      "out": "art/edits/redo/d_iron_ore_3.png",
+      "note": "Redo 3: 1 px at 3:1 on the Shallows floor. The top lit px of each of the four rocks to #a8b5b2.",
+      "ops": [
+        { "pixels": [[3, 2, "#577277", "#a8b5b2"], [11, 3, "#577277", "#a8b5b2"], [2, 12, "#819796", "#a8b5b2"], [12, 11, "#577277", "#a8b5b2"]] }
+      ]
+    },
+    {
+      "name": "d_coal_2",
+      "src": "art/raw/g2/d_coal_2.png",
+      "out": "art/edits/redo/d_coal_2.png",
+      "note": "Redo 3: exactly 3 px at 3:1 on the Shallows floor. Two more glossy facets #a8b5b2: the big lump's facet grows by its #819796 px, and the chip at the top right gets a glint.",
+      "ops": [
+        { "pixels": [[4, 4, "#819796", "#a8b5b2"], [10, 3, "#577277", "#a8b5b2"]] }
+      ]
+    },
+    {
+      "name": "d_coal_3",
+      "src": "art/raw/g1/fixed/d_coal_f9.png",
+      "out": "art/edits/redo/d_coal_3.png",
+      "note": "Redo 3: 2 px at 3:1 on the Shallows floor. Glossy #a8b5b2 facets on the two lumps that had none: the top-left lump's lit #819796 px and the bottom-right lump's top facet.",
+      "ops": [
+        { "pixels": [[2, 3, "#819796", "#a8b5b2"], [11, 9, "#577277", "#a8b5b2"]] }
+      ]
+    },
+    {
+      "name": "d_thrumstone_1",
+      "src": "art/raw/g1/d_thrumstone_1.png",
+      "out": "art/edits/redo/d_thrumstone_1.png",
+      "note": "Redo 4: the only thrumstone variant with no aqua (a plain grey pebble cluster). A 4 px #a4dddb ring-groove arc on the centre pebble and on the bottom-right pebble, like the grooves of variants 2 and 3.",
+      "ops": [
+        { "pixels": [[6, 8, "#819796", "#a4dddb"], [7, 9, "#a8b5b2", "#a4dddb"], [8, 9, "#a8b5b2", "#a4dddb"], [9, 8, "#a8b5b2", "#a4dddb"], [10, 12, "#a8b5b2", "#a4dddb"], [11, 13, "#a8b5b2", "#a4dddb"],
+                     [12, 13, "#a8b5b2", "#a4dddb"], [13, 12, "#a8b5b2", "#a4dddb"]] }
+      ]
+    },
+    {
+      "name": "x_l1_minecart",
+      "src": "art/raw/m1/x_l1_minecart.png",
+      "out": "art/edits/redo/x_l1_minecart.png",
+      "note": "Redo 5: read as a dark steel machine (35% #090a14, 32% steel greys). Steel greys to L1's terrain ramp and the outline to the soft #241527: a rusted cart that sits back as decor.",
+      "ops": [
+        { "map": { "#202e37": "#341c27", "#394a50": "#4d2b32", "#577277": "#7a4841", "#819796": "#ad7757", "#090a14": "#241527" } }
+      ]
+    },
+    {
+      "name": "b_terminal",
+      "src": "art/raw/c/b_terminal.png",
+      "out": "art/edits/redo/b_terminal.png",
+      "note": "Redo 7: the weakest Company read of the 3x3 buildings (17 px #de9e41; HQ 787, Depot 542). Inside the gantry only (back beam, trolley rail and the two posts; the containers are untouched): brass #be772b to company yellow #de9e41 and #884b2b up to #be772b, an #e8c170 highlight along the lit left end of the top beam, and a 5 px #ebede9 'T' stencil on the plain deck between the two gratings.",
+      "ops": [
+        { "map": { "#be772b": "#de9e41", "#884b2b": "#be772b" }, "region": [4, 5, 40, 7] },
+        { "map": { "#be772b": "#de9e41", "#884b2b": "#be772b" }, "region": [6, 12, 3, 20] },
+        { "map": { "#be772b": "#de9e41", "#884b2b": "#be772b" }, "region": [39, 12, 3, 20] },
+        { "pixels": [[5, 5, "#de9e41", "#e8c170"], [6, 5, "#de9e41", "#e8c170"], [7, 5, "#de9e41", "#e8c170"], [8, 5, "#de9e41", "#e8c170"], [9, 5, "#de9e41", "#e8c170"], [10, 5, "#de9e41", "#e8c170"]] },
+        { "pixels": [[22, 37, "#577277", "#ebede9"], [23, 37, "#577277", "#ebede9"], [24, 37, "#577277", "#ebede9"], [23, 38, "#577277", "#ebede9"], [23, 39, "#577277", "#ebede9"]] }
+      ]
+    },
+    {
+      "name": "b_cutter",
+      "src": "art/raw/m1/b_cutter.png",
+      "out": "art/edits/redo/b_cutter.png",
+      "note": "Redo 8: the Crystal family glowed in #a4dddb, the Alien family's light and L5's accent. Coils #a4dddb to #73bed3; the #ebede9 glints stay. Crystal = cyan coils, Alien = aqua light.",
+      "ops": [
+        { "map": { "#a4dddb": "#73bed3" } }
+      ]
+    },
+    {
+      "name": "b_crusher",
+      "src": "art/raw/m2/b_crusher.png",
+      "out": "art/edits/redo/b_crusher.png",
+      "note": "Redo 8: coils #a4dddb to #73bed3, #ebede9 glints kept.",
+      "ops": [
+        { "map": { "#a4dddb": "#73bed3" } }
+      ]
+    },
+    {
+      "name": "b_charger",
+      "src": "art/raw/m2/b_charger.png",
+      "out": "art/edits/redo/b_charger.png",
+      "note": "Redo 8: coils #a4dddb to #73bed3, #ebede9 glints kept.",
+      "ops": [
+        { "map": { "#a4dddb": "#73bed3" } }
+      ]
+    },
+    {
+      "name": "b_overcharger",
+      "src": "art/raw/m1/b_overcharger.png",
+      "out": "art/edits/redo/b_overcharger.png",
+      "note": "Redo 8: coils #a4dddb to #73bed3, the #ebede9 core and glints kept.",
+      "ops": [
+        { "map": { "#a4dddb": "#73bed3" } }
+      ]
+    },
+    {
+      "name": "b_resonance_tap",
+      "src": "art/raw/m2/b_resonance_tap.png",
+      "out": "art/edits/redo/b_resonance_tap.png",
+      "note": "Redo 8: coils and rings #a4dddb to #73bed3, #ebede9 glints kept.",
+      "ops": [
+        { "map": { "#a4dddb": "#73bed3" } }
+      ]
+    },
+    {
+      "name": "i_cobalt_ingot",
+      "src": "art/edits/i1/i_cobalt_ingot.png",
+      "out": "art/edits/redo/i_cobalt_ingot.png",
+      "note": "Redo 9: 0 px at 3:1 on the #394a50 belt (cobalt stops at #4f8fba, 2.63:1). Two #a8b5b2 shine px (4.37:1) at the upper-left of the top face (proposed STYLE line: cobalt items may carry 1-2 px of #a8b5b2 shine).",
+      "ops": [
+        { "pixels": [[5, 3, "#4f8fba", "#a8b5b2"], [4, 4, "#4f8fba", "#a8b5b2"]] }
+      ]
+    },
+    {
+      "name": "i_cobalt_ore",
+      "src": "art/edits/i1/i_cobalt_ore.png",
+      "out": "art/edits/redo/i_cobalt_ore.png",
+      "note": "Redo 9: its single 3:1 px was a stray #ebede9 outside the cobalt ramp. That px becomes #a8b5b2 shine and one more lit px beside it joins it: 2 px at the upper left.",
+      "ops": [
+        { "pixels": [[4, 2, "#ebede9", "#a8b5b2"], [3, 2, "#4f8fba", "#a8b5b2"]] }
+      ]
+    },
+    {
+      "name": "i_heat_shield",
+      "src": "art/edits/i2/i_heat_shield.png",
+      "out": "art/edits/redo/i_heat_shield.png",
+      "note": "Redo 10: blurred with i_reinforced_plate (both a grey square with orange corners). The tile faces go from steel to the Aggregate they are made of: #394a50 to #7a4841, #577277 to #ad7757. Grout, outline and the orange corners stay; the reinforced plate stays steel.",
+      "ops": [
+        { "map": { "#394a50": "#7a4841", "#577277": "#ad7757" }, "region": [1, 1, 10, 10], "expect": 63 }
+      ]
+    },
+    {
+      "name": "b_stabilizer",
+      "src": "art/raw/m2/b_stabilizer.png",
+      "out": "art/edits/redo/b_stabilizer.png",
+      "note": "Redo 12: the amber chamber around a white-hot core read as a Heat machine. Central chamber only (x 6-25, y 8-21): #e8c170 to #73bed3 and #da863e to #4f8fba, keeping the #ebede9 core; the brass frame, its south band and the amber insulation pads stay. Ops 1-2 finish the job on the chamber's 63 leftover warm px (the red-orange inner rim, yellow and brass specks, the sand halo), which otherwise left a hot orange rim around the blue glass: rim and specks to #3c5e8b, lit edge to #73bed3, halo to #a8b5b2 / #c7cfcc.",
+      "ops": [
+        { "map": { "#e8c170": "#73bed3", "#da863e": "#4f8fba" }, "region": [6, 8, 20, 14], "expect": 154 },
+        { "map": { "#de9e41": "#73bed3", "#cf573c": "#3c5e8b", "#be772b": "#3c5e8b", "#d7b594": "#a8b5b2", "#e7d5b3": "#c7cfcc", "#c09473": "#a8b5b2" }, "region": [6, 8, 20, 13], "expect": 62 },
+        { "pixels": [[20, 21, "#de9e41", "#73bed3"]] }
+      ]
+    },
+    {
+      "name": "t_l2_floor_rock_v1",
+      "src": "art/edits/terrain/t_l2_floor_rock.png",
+      "out": "art/edits/redo/t_l2_floor_rock_v1.png",
+      "note": "Redo 11: the Fungal floor's tile 0 is one flat #402751 fill (the plan's moss and cracks never came back from PixelLab), so one tile paves the whole floor. Variant sheet 1 of 3: the whole t_l2_floor_rock sheet with only tile 0 (its top-left 16 x 16) changed: a 5 px #1e1d39 crack at the upper left, sparse #25562e / #19332d moss flecks at the lower right. Only pixels 2-13 change, so it seams with every neighbour. Tile 0 of t_l2_floor_water is the same flat fill, so these tiles are the water set's variants too (and the renderer draws every all-floor tile from the rock sheet).",
+      "ops": [
+        { "pixels": [[3, 4, "#402751", "#1e1d39"], [4, 4, "#402751", "#1e1d39"], [5, 5, "#402751", "#1e1d39"], [6, 5, "#402751", "#1e1d39"], [7, 6, "#402751", "#1e1d39"], [10, 10, "#402751", "#25562e"],
+                     [11, 10, "#402751", "#19332d"], [10, 11, "#402751", "#19332d"], [12, 12, "#402751", "#25562e"]] }
+      ]
+    },
+    {
+      "name": "t_l2_floor_rock_v2",
+      "src": "art/edits/terrain/t_l2_floor_rock.png",
+      "out": "art/edits/redo/t_l2_floor_rock_v2.png",
+      "note": "Redo 11: variant 2 of 3 of the Fungal floor's tile 0: a 5 px crack at the upper right, moss flecks at the lower left; pixels 2-13 only.",
+      "ops": [
+        { "pixels": [[10, 3, "#402751", "#1e1d39"], [10, 4, "#402751", "#1e1d39"], [11, 5, "#402751", "#1e1d39"], [11, 6, "#402751", "#1e1d39"], [12, 7, "#402751", "#1e1d39"], [4, 9, "#402751", "#25562e"],
+                     [5, 9, "#402751", "#19332d"], [4, 10, "#402751", "#19332d"], [6, 11, "#402751", "#25562e"]] }
+      ]
+    },
+    {
+      "name": "t_l2_floor_rock_v3",
+      "src": "art/edits/terrain/t_l2_floor_rock.png",
+      "out": "art/edits/redo/t_l2_floor_rock_v3.png",
+      "note": "Redo 11: variant 3 of 3 of the Fungal floor's tile 0: a 6 px crack low in the tile, moss flecks at the top; pixels 2-13 only.",
+      "ops": [
+        { "pixels": [[5, 11, "#402751", "#1e1d39"], [6, 11, "#402751", "#1e1d39"], [7, 10, "#402751", "#1e1d39"], [8, 10, "#402751", "#1e1d39"], [9, 10, "#402751", "#1e1d39"], [10, 9, "#402751", "#1e1d39"],
+                     [9, 4, "#402751", "#25562e"], [10, 4, "#402751", "#19332d"], [10, 5, "#402751", "#25562e"], [3, 6, "#402751", "#19332d"]] }
+      ]
+    },
+    {
+      "name": "x_l1_support",
+      "src": "art/raw/m1/x_l1_support.png",
+      "out": "art/edits/redo/x_l1_support.png",
+      "note": "Redo 13: decor carried 7 px of the lamp colour #e8c170 on its beam. To #c09473 (decor stays dull). Review 3 A13 (op 1): the #090a14 outline (147 px) to #341c27.",
+      "ops": [
+        { "map": { "#e8c170": "#c09473" }, "expect": 7 },
+        { "map": { "#090a14": "#341c27" }, "expect": 147, "note": "Review 3 A13: the #090a14 outline to the Shallows wall's darkest #341c27 (decor never uses the darkness tint)." }
+      ]
+    },
+    {
+      "name": "x_l5_glass_shard",
+      "src": "art/raw/g1/x_l5_glass_shard.png",
+      "out": "art/edits/redo/x_l5_glass_shard.png",
+      "note": "Redo 13: one #a4dddb and one #ebede9 px are engine-glass colours. To the dull #819796 / #a8b5b2.",
+      "ops": [
+        { "map": { "#a4dddb": "#819796", "#ebede9": "#a8b5b2" }, "expect": 2 }
+      ]
+    },
+    {
+      "name": "b_precision_assembler",
+      "src": "art/edit/m2/b_precision_assembler.png",
+      "out": "art/edits/redo/b_precision_assembler.png",
+      "note": "Family accents (fix pass 4): a Fabrication machine wore a pale cyan glass dome and a cyan screen, the Crystal / Chemistry colours. Chained on the M2 edit. Op 0, the dome over the arm (x 11-21, y 3-13): glass #a4dddb to #c7cfcc and its #c7cfcc glints up to #ebede9, the blue darks to the steel ramp (#172038 to #202e37, #253a5e to #394a50, #3c5e8b to #577277): a polished steel dome. Op 1, the screen (x 22-28, y 13-16): #73bed3 to #de9e41 and #a4dddb to #e8c170, its #253a5e shadow to #394a50: a pale-gold indicator lamp like b_assembler's, the machine's light spot. The brass ring and the #be772b rivets stay.",
+      "ops": [
+        { "map": { "#a4dddb": "#c7cfcc", "#c7cfcc": "#ebede9", "#172038": "#202e37", "#253a5e": "#394a50", "#3c5e8b": "#577277" }, "region": [11, 3, 11, 11], "expect": 13 },
+        { "map": { "#73bed3": "#de9e41", "#a4dddb": "#e8c170", "#253a5e": "#394a50" }, "region": [22, 13, 7, 4], "expect": 8 }
+      ]
+    },
+    {
+      "name": "b_assay_lab",
+      "src": "art/raw/c/b_assay_lab.png",
+      "out": "art/edits/redo/b_assay_lab.png",
+      "note": "Family accents (fix pass 4): a Company building wore a pale cyan glass dome, the Crystal / Chemistry colours. The dome only (x 17-30, y 15-26): glass #a4dddb to the lamp-lit #e8c170, its #73bed3 and #a8b5b2 shading to company #de9e41, the #172038 / #253a5e shadow under it to #151d28 / #202e37; the #ebede9 glints, #819796 frame and #c09473 / #d7b594 lower rim stay. A warm skylight in the Company's yellow; the dome is still the light spot (the analyzer).",
+      "ops": [
+        { "map": { "#a4dddb": "#e8c170", "#73bed3": "#de9e41", "#a8b5b2": "#de9e41", "#172038": "#151d28", "#253a5e": "#202e37" }, "region": [17, 15, 14, 12], "expect": 85 }
+      ]
+    },
+    {
+      "name": "x_l1_stalagmite",
+      "src": "art/raw/g1/x_l1_stalagmite.png",
+      "out": "art/edits/redo/x_l1_stalagmite.png",
+      "note": "Review 3 A13: decor never uses #090a14, the darkness tint: its one outline pixel to the Shallows wall's darkest #341c27.",
+      "ops": [
+        { "map": { "#090a14": "#341c27" }, "expect": 1 }
+      ]
+    },
+    {
+      "name": "x_l2_mushroom_tall",
+      "src": "art/edit/m2/x_l2_mushroom_tall.png",
+      "out": "art/edits/redo/x_l2_mushroom_tall.png",
+      "note": "Review 3 A13: chained on the M2 edit. The #090a14 outline (92 px) to the Fungal wall's darkest #241527. The stem was steel grey #819796 (51 px) and read as a metal post. It becomes a plum stalk shaded as a cylinder lit from the left: op 0 its left column (x 13, y 20-26) the lit plum #a23e8c, op 1 its right column (x 18, y 20-27) the violet #402751, op 2 the rest the cap's #7a367b, so it meets its own #7a367b base flare. A whole #a23e8c stem read as glowcap pink at 1x and a #402751 one vanished into the floor; the cap's dark underside keeps cap and stalk apart. The one #577277 px to #402751.",
+      "ops": [
+        { "map": { "#819796": "#a23e8c" }, "region": [13, 20, 1, 7], "expect": 7 },
+        { "map": { "#819796": "#402751" }, "region": [18, 20, 1, 8], "expect": 8 },
+        { "map": { "#090a14": "#241527", "#819796": "#7a367b", "#577277": "#402751" }, "expect": 129 }
+      ]
+    },
+    {
+      "name": "x_l2_spore_pod",
+      "src": "art/raw/g1/x_l2_spore_pod.png",
+      "out": "art/edits/redo/x_l2_spore_pod.png",
+      "note": "Review 3 A13: the #090a14 outline (13 px) to the Fungal wall's darkest #241527.",
+      "ops": [
+        { "map": { "#090a14": "#241527" }, "expect": 13 }
+      ]
+    },
+    {
+      "name": "x_l3_crystal_small",
+      "src": "art/raw/g2/x_l3_crystal_small.png",
+      "out": "art/edits/redo/x_l3_crystal_small.png",
+      "note": "Review 3 A13: the #090a14 outline (3 px) to the Crystal wall's darkest #10141f.",
+      "ops": [
+        { "map": { "#090a14": "#10141f" }, "expect": 3 }
+      ]
+    },
+    {
+      "name": "x_l3_crystal_large",
+      "src": "art/raw/m1/x_l3_crystal_large.png",
+      "out": "art/edits/redo/x_l3_crystal_large.png",
+      "note": "Review 3 A13: the #090a14 outline (133 px) to the Crystal wall's darkest #10141f.",
+      "ops": [
+        { "map": { "#090a14": "#10141f" }, "expect": 133 }
+      ]
+    },
+    {
+      "name": "x_l3_geode",
+      "src": "art/raw/g1/x_l3_geode.png",
+      "out": "art/edits/redo/x_l3_geode.png",
+      "note": "Review 3 A13: its pale rim (#a8b5b2 5, #c7cfcc 1, #819796 16) round an #090a14 hollow read as a hole. The rim to the layer's blue-grey rock (#577277 lit, #394a50), the hollow (11 px) to the Crystal navy #172038: a dull rock with a dark centre, in STYLE's L3 decor accent.",
+      "ops": [
+        { "map": { "#a8b5b2": "#577277", "#c7cfcc": "#577277", "#819796": "#394a50", "#090a14": "#172038" }, "expect": 33 }
+      ]
+    },
+    {
+      "name": "x_l4_hex_pillar",
+      "src": "art/raw/m1/x_l4_hex_pillar.png",
+      "out": "art/edits/redo/x_l4_hex_pillar.png",
+      "note": "Review 3 A13: the #090a14 outline (175 px) to the Magma wall's darkest #10141f.",
+      "ops": [
+        { "map": { "#090a14": "#10141f" }, "expect": 175 }
+      ]
+    },
+    {
+      "name": "x_l4_vent",
+      "src": "art/raw/g2/x_l4_vent.png",
+      "out": "art/edits/redo/x_l4_vent.png",
+      "note": "Review 3 A13: the #090a14 outline and opening (27 px) to #10141f; its rim's Heat-brick #752438 (4) to the dull maroon #411d31 and its #602c2c (9) to #241527 (L4 decor: dull maroon, no orange).",
+      "ops": [
+        { "map": { "#090a14": "#10141f", "#752438": "#411d31", "#602c2c": "#241527" }, "expect": 40 }
+      ]
+    },
+    {
+      "name": "x_l4_ember_rock",
+      "src": "art/raw/g1/x_l4_ember_rock.png",
+      "out": "art/edits/redo/x_l4_ember_rock.png",
+      "note": "Review 3 A13: the #090a14 outline (15 px) to the Magma wall's darkest #10141f.",
+      "ops": [
+        { "map": { "#090a14": "#10141f" }, "expect": 15 }
+      ]
+    },
+    {
+      "name": "x_l5_stone_gear",
+      "src": "art/raw/m1/x_l5_stone_gear.png",
+      "out": "art/edits/redo/x_l5_stone_gear.png",
+      "note": "Review 3 A13: the #090a14 outline (106 px) to the Alien wall's darkest #151d28.",
+      "ops": [
+        { "map": { "#090a14": "#151d28" }, "expect": 106 }
+      ]
+    },
+    {
+      "name": "x_l0_survey_flag",
+      "src": "art/raw/g1/x_l0_survey_flag.png",
+      "out": "art/edits/redo/x_l0_survey_flag.png",
+      "note": "Review 3 A13: its pennant's 2 px of #cf573c, the UI's 'bad' red, to the wood #ad7757 (STYLE: the flag is wood; #884b2b would be the brass A1 moves the crates off).",
+      "ops": [
+        { "map": { "#cf573c": "#ad7757" }, "expect": 2 }
+      ]
+    },
+    {
+      "name": "x_l0_bush",
+      "src": "art/raw/g1/x_l0_bush.png",
+      "out": "art/edits/redo/x_l0_bush.png",
+      "note": "Review 3 A13: glow pixels off a decor bush: the one #ebede9 to sand #d7b594, the two pale-lime #d0da91 and the one #75a743 to #468232, inside L0's scrub accent (#25562e #468232).",
+      "ops": [
+        { "map": { "#ebede9": "#d7b594", "#d0da91": "#468232", "#75a743": "#468232" }, "expect": 4 }
+      ]
+    },
+    {
+      "name": "t_l0_ground_rock_v1",
+      "src": "art/edits/terrain/t_l0_ground_rock.png",
+      "out": "art/edits/redo/t_l0_ground_rock_v1.png",
+      "note": "Review 3 A3: Surface floor variant 1 of 3, only tile 0 (pixels 2-13) changed. The floor's tile 0 repeated as a '3E3E' wallpaper. Op 0 copies tile 0's own texture from 2 px down and right into the centre (the dashes move up and left), op 1 thins it (every second #d7b594 dash lying wholly inside pixels 3-12 back to #c09473) and adds a 2 x 2 pebble, a 1 x 2 pebble and a speck (#d7b594 lit top, #ad7757 below).",
+      "ops": [
+        { "copy": [4, 4, 12, 12], "to": [2, 2] },
+        { "pixels": [[6, 5, "#d7b594", "#c09473"], [7, 5, "#d7b594", "#c09473"], [8, 7, "#d7b594", "#ad7757"], [7, 7, "#d7b594", "#c09473"], [6, 7, "#d7b594", "#c09473"], [8, 5, "#d7b594", "#c09473"],
+                     [9, 6, "#c09473", "#d7b594"], [9, 7, "#c09473", "#ad7757"], [12, 9, "#c09473", "#d7b594"], [12, 10, "#c09473", "#ad7757"], [5, 8, "#c09473", "#ad7757"]] }
+      ]
+    },
+    {
+      "name": "t_l0_ground_rock_v2",
+      "src": "art/edits/terrain/t_l0_ground_rock.png",
+      "out": "art/edits/redo/t_l0_ground_rock_v2.png",
+      "note": "Review 3 A3: Surface floor variant 2 of 3: tile 0's texture from 2 px left and down (the dashes move right and up), the other half of the interior dashes thinned, a 2 x 2 pebble, a 1 x 2 pebble and a speck.",
+      "ops": [
+        { "copy": [0, 4, 12, 12], "to": [2, 2] },
+        { "pixels": [[12, 6, "#d7b594", "#c09473"], [12, 7, "#d7b594", "#c09473"], [11, 7, "#d7b594", "#c09473"], [10, 7, "#d7b594", "#c09473"], [12, 5, "#d7b594", "#c09473"], [5, 9, "#d7b594", "#c09473"],
+                     [10, 6, "#c09473", "#ad7757"], [11, 6, "#c09473", "#ad7757"], [6, 9, "#c09473", "#d7b594"], [6, 10, "#c09473", "#ad7757"], [12, 8, "#c09473", "#ad7757"]] }
+      ]
+    },
+    {
+      "name": "t_l0_ground_rock_v3",
+      "src": "art/edits/terrain/t_l0_ground_rock.png",
+      "out": "art/edits/redo/t_l0_ground_rock_v3.png",
+      "note": "Review 3 A3: Surface floor variant 3 of 3: tile 0's texture from 2 px right and up (the dashes move left and down), one interior dash in three thinned, two 2 x 2 pebbles and a speck.",
+      "ops": [
+        { "copy": [4, 0, 12, 12], "to": [2, 2] },
+        { "pixels": [[8, 3, "#d7b594", "#c09473"], [8, 4, "#d7b594", "#c09473"], [9, 3, "#d7b594", "#c09473"], [9, 6, "#d7b594", "#c09473"], [10, 7, "#d7b594", "#c09473"], [10, 8, "#d7b594", "#c09473"],
+                     [11, 6, "#d7b594", "#c09473"], [9, 7, "#d7b594", "#c09473"], [10, 6, "#d7b594", "#c09473"], [6, 4, "#c09473", "#d7b594"], [7, 4, "#c09473", "#d7b594"], [6, 5, "#c09473", "#ad7757"],
+                     [7, 5, "#c09473", "#ad7757"], [10, 12, "#c09473", "#d7b594"], [11, 12, "#c09473", "#d7b594"], [10, 13, "#c09473", "#ad7757"], [11, 13, "#c09473", "#ad7757"], [11, 8, "#c09473", "#ad7757"]] }
+      ]
+    },
+    {
+      "name": "t_l1_floor_rock_v1",
+      "src": "art/edits/terrain/t_l1_floor_rock.png",
+      "out": "art/edits/redo/t_l1_floor_rock_v1.png",
+      "note": "Review 3 A3: Shallows floor variant 1 of 3, from the A11-fixed sheet (run terrain-fix.ts --recipe art/recipes/terrain_t_l1_floor_rock.json first), only tile 0 (pixels 2-13): the flat #7a4841 floor gets a 5 px #4d2b32 crack at the upper left and three #ad7757 specks at the lower right.",
+      "ops": [
+        { "pixels": [[4, 3, "#7a4841", "#4d2b32"], [5, 4, "#7a4841", "#4d2b32"], [5, 5, "#7a4841", "#4d2b32"], [6, 6, "#7a4841", "#4d2b32"], [7, 6, "#7a4841", "#4d2b32"], [10, 9, "#7a4841", "#ad7757"],
+                     [12, 11, "#7a4841", "#ad7757"], [9, 12, "#7a4841", "#ad7757"]] }
+      ]
+    },
+    {
+      "name": "t_l1_floor_rock_v2",
+      "src": "art/edits/terrain/t_l1_floor_rock.png",
+      "out": "art/edits/redo/t_l1_floor_rock_v2.png",
+      "note": "Review 3 A3: Shallows floor variant 2 of 3: a 5 px #4d2b32 crack at the lower right, four #ad7757 specks round the top and left.",
+      "ops": [
+        { "pixels": [[8, 10, "#7a4841", "#4d2b32"], [9, 10, "#7a4841", "#4d2b32"], [10, 11, "#7a4841", "#4d2b32"], [11, 11, "#7a4841", "#4d2b32"], [12, 12, "#7a4841", "#4d2b32"], [4, 5, "#7a4841", "#ad7757"],
+                     [6, 3, "#7a4841", "#ad7757"], [3, 9, "#7a4841", "#ad7757"], [11, 4, "#7a4841", "#ad7757"]] }
+      ]
+    },
+    {
+      "name": "t_l1_floor_rock_v3",
+      "src": "art/edits/terrain/t_l1_floor_rock.png",
+      "out": "art/edits/redo/t_l1_floor_rock_v3.png",
+      "note": "Review 3 A3: Shallows floor variant 3 of 3: a 6 px #4d2b32 crack down the upper right, three #ad7757 specks at the left.",
+      "ops": [
+        { "pixels": [[11, 3, "#7a4841", "#4d2b32"], [11, 4, "#7a4841", "#4d2b32"], [10, 5, "#7a4841", "#4d2b32"], [10, 6, "#7a4841", "#4d2b32"], [9, 7, "#7a4841", "#4d2b32"], [9, 8, "#7a4841", "#4d2b32"],
+                     [4, 10, "#7a4841", "#ad7757"], [6, 12, "#7a4841", "#ad7757"], [3, 6, "#7a4841", "#ad7757"]] }
+      ]
+    },
+    {
+      "name": "t_l3_floor_rock_v1",
+      "src": "art/edits/terrain/t_l3_floor_rock.png",
+      "out": "art/edits/redo/t_l3_floor_rock_v1.png",
+      "note": "Review 3 A3: Crystal floor variant 1 of 3, only tile 0 (pixels 2-13): the flat #253a5e floor gets a 5 px #172038 crack low on the left and three #3c5e8b specks at the upper right.",
+      "ops": [
+        { "pixels": [[3, 10, "#253a5e", "#172038"], [4, 10, "#253a5e", "#172038"], [5, 11, "#253a5e", "#172038"], [6, 11, "#253a5e", "#172038"], [7, 12, "#253a5e", "#172038"], [10, 4, "#253a5e", "#3c5e8b"],
+                     [12, 7, "#253a5e", "#3c5e8b"], [9, 8, "#253a5e", "#3c5e8b"]] }
+      ]
+    },
+    {
+      "name": "t_l3_floor_rock_v2",
+      "src": "art/edits/terrain/t_l3_floor_rock.png",
+      "out": "art/edits/redo/t_l3_floor_rock_v2.png",
+      "note": "Review 3 A3: Crystal floor variant 2 of 3: a 5 px #172038 crack at the upper right, three #3c5e8b specks at the left and bottom.",
+      "ops": [
+        { "pixels": [[9, 3, "#253a5e", "#172038"], [10, 4, "#253a5e", "#172038"], [10, 5, "#253a5e", "#172038"], [11, 6, "#253a5e", "#172038"], [12, 6, "#253a5e", "#172038"], [4, 9, "#253a5e", "#3c5e8b"],
+                     [6, 12, "#253a5e", "#3c5e8b"], [3, 5, "#253a5e", "#3c5e8b"]] }
+      ]
+    },
+    {
+      "name": "t_l3_floor_rock_v3",
+      "src": "art/edits/terrain/t_l3_floor_rock.png",
+      "out": "art/edits/redo/t_l3_floor_rock_v3.png",
+      "note": "Review 3 A3: Crystal floor variant 3 of 3: a 6 px #172038 crack across the middle, three #3c5e8b specks in three corners.",
+      "ops": [
+        { "pixels": [[5, 6, "#253a5e", "#172038"], [6, 6, "#253a5e", "#172038"], [7, 7, "#253a5e", "#172038"], [8, 7, "#253a5e", "#172038"], [9, 8, "#253a5e", "#172038"], [10, 8, "#253a5e", "#172038"],
+                     [4, 12, "#253a5e", "#3c5e8b"], [12, 3, "#253a5e", "#3c5e8b"], [12, 11, "#253a5e", "#3c5e8b"]] }
+      ]
+    },
+    {
+      "name": "t_l4_hot_magma_v1",
+      "src": "art/edits/terrain/t_l4_hot_magma.png",
+      "out": "art/edits/redo/t_l4_hot_magma_v1.png",
+      "note": "Review 3 A3: magma variant 1 of 3, only tile 15 (all magma, pixels 2-13); tile 0 stays t_l4_floor_hot's tile 15. Op 0 copies the swirls of a pure-magma 12 x 12 of tile 11 into the centre (no white-hot pixel there), op 1 adds one: #ebede9 at tile (5, 10) with two #e8c170 beside it.",
+      "ops": [
+        { "copy": [48, 36, 12, 12], "to": [50, 50] },
+        { "pixels": [[53, 58, "#cf573c", "#ebede9"], [52, 58, "#cf573c", "#e8c170"], [52, 59, "#cf573c", "#e8c170"]] }
+      ]
+    },
+    {
+      "name": "t_l4_hot_magma_v2",
+      "src": "art/edits/terrain/t_l4_hot_magma.png",
+      "out": "art/edits/redo/t_l4_hot_magma_v2.png",
+      "note": "Review 3 A3: magma variant 2 of 3: the centre from tile 7's pure-magma 12 x 12, keeping its white-hot pixel at tile (7, 5) and turning its second one to #e8c170.",
+      "ops": [
+        { "copy": [52, 20, 12, 12], "to": [50, 50] },
+        { "pixels": [[56, 54, "#ebede9", "#e8c170"]] }
+      ]
+    },
+    {
+      "name": "t_l4_hot_magma_v3",
+      "src": "art/edits/terrain/t_l4_hot_magma.png",
+      "out": "art/edits/redo/t_l4_hot_magma_v3.png",
+      "note": "Review 3 A3: magma variant 3 of 3: the centre from tile 14's pure-magma 12 x 12, keeping one white-hot pixel at tile (11, 10) and turning its other two to #e8c170.",
+      "ops": [
+        { "copy": [32, 48, 12, 12], "to": [50, 50] },
+        { "pixels": [[59, 57, "#ebede9", "#e8c170"], [60, 58, "#ebede9", "#e8c170"]] }
+      ]
+    }
+  ]
+}

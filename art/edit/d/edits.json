@@ -1,0 +1,61 @@
+{
+  "note": "b_drill_broken: a free hand edit of the chosen working drill (art/raw/d/b_drill.png, D frame 10), made in pixelart_workbench (image 904170f3 -> 80aba3d5 -> 8aa45c4b; the workbench change lists are in art/edit/d/b_drill_broken.workbench.json) and recorded here in scripts/art/recolor.ts form so it replays offline: 'node scripts/art/recolor.ts art/edit/d/edits.json' rebuilds art/edit/d/b_drill_broken.png pixel for pixel (checked against the workbench download). Coordinates are raw 80x80 frame pixels (the build places the art 1 px lower: final y = raw y + 1). The raw download stays untouched.",
+  "edits": [
+    {
+      "name": "b_drill_broken",
+      "src": "art/raw/d/b_drill.png",
+      "out": "art/edit/d/b_drill_broken.png",
+      "note": "Same machine, broken and idle (STYLE Animation): dead work lamps, a cracked left housing, rust streaks and patches, a snapped drill string, snapped tooth shards on the deck, the derrick crown's top-right corner broken off. It stands upright.",
+      "ops": [
+        { "map": { "#ebede9": "#577277", "#d0da91": "#577277", "#e8c170": "#394a50", "#de9e41": "#394a50" }, "region": [6, 21, 6, 7], "expect": 11, "note": "dead left work lamp" },
+        { "map": { "#ebede9": "#577277", "#d0da91": "#577277", "#e8c170": "#394a50", "#de9e41": "#394a50", "#d7b594": "#577277" }, "region": [66, 21, 7, 7], "expect": 13, "note": "dead right work lamp" },
+        {
+          "note": "crack down the left engine housing, lit top face into the yellow front, with chipped edges",
+          "pixels": [
+            [11, 32, "#e8c170", "#341c27"], [11, 33, "#e8c170", "#341c27"], [12, 34, "#e8c170", "#341c27"], [12, 35, "#e8c170", "#341c27"],
+            [13, 36, "#e8c170", "#341c27"], [13, 37, "#e8c170", "#341c27"], [14, 38, "#de9e41", "#341c27"], [15, 39, "#de9e41", "#341c27"],
+            [15, 40, "#de9e41", "#341c27"], [16, 41, "#de9e41", "#341c27"], [16, 42, "#de9e41", "#341c27"],
+            [12, 33, "#e8c170", "#be772b"], [13, 35, "#e8c170", "#be772b"], [14, 37, "#de9e41", "#be772b"], [16, 40, "#de9e41", "#be772b"]
+          ]
+        },
+        {
+          "note": "rust streaks down both yellow housings, rust stains on the deck in front of the bore",
+          "pixels": [
+            [22, 38, "#de9e41", "#884b2b"], [22, 39, "#de9e41", "#7a4841"], [22, 40, "#de9e41", "#7a4841"], [22, 41, "#de9e41", "#884b2b"],
+            [9, 37, "#e8c170", "#ad7757"], [9, 38, "#e8c170", "#ad7757"], [9, 39, "#e8c170", "#c09473"],
+            [18, 33, "#de9e41", "#884b2b"], [18, 34, "#de9e41", "#7a4841"], [18, 35, "#de9e41", "#7a4841"], [18, 36, "#de9e41", "#884b2b"], [18, 37, "#de9e41", "#be772b"],
+            [64, 39, "#de9e41", "#884b2b"], [64, 40, "#de9e41", "#7a4841"], [64, 41, "#de9e41", "#7a4841"], [64, 42, "#e8c170", "#ad7757"],
+            [61, 39, "#de9e41", "#884b2b"], [61, 40, "#de9e41", "#7a4841"], [61, 41, "#de9e41", "#884b2b"],
+            [34, 64, "#202e37", "#4d2b32"], [35, 64, "#202e37", "#7a4841"], [36, 64, "#202e37", "#4d2b32"], [44, 63, "#202e37", "#4d2b32"], [45, 63, "#202e37", "#7a4841"]
+          ]
+        },
+        {
+          "note": "the drill string inside the derrick snapped (a 2-row gap with rusty broken ends); snapped teeth lie as steel shards on the deck",
+          "pixels": [
+            [39, 29, "#602c2c", "#090a14"], [40, 29, "#4d2b32", "#090a14"], [39, 30, "#4d2b32", "#090a14"], [40, 30, "#4d2b32", "#090a14"],
+            [40, 28, "#4d2b32", "#7a4841"], [40, 31, "#4d2b32", "#7a4841"],
+            [40, 69, "#202e37", "#a8b5b2"], [41, 69, "#202e37", "#577277"], [47, 69, "#202e37", "#819796"]
+          ]
+        },
+        {
+          "note": "heavier rust patches so the broken rig reads as abandoned at 1x",
+          "pixels": [
+            [8, 41, "#e8c170", "#ad7757"], [9, 41, "#e8c170", "#884b2b"], [8, 42, "#e8c170", "#884b2b"], [9, 42, "#e8c170", "#7a4841"],
+            [10, 42, "#e8c170", "#ad7757"], [8, 43, "#e8c170", "#7a4841"], [9, 43, "#e8c170", "#884b2b"],
+            [17, 43, "#de9e41", "#884b2b"], [18, 43, "#de9e41", "#7a4841"], [19, 43, "#de9e41", "#7a4841"], [20, 43, "#de9e41", "#884b2b"],
+            [14, 32, "#de9e41", "#be772b"], [15, 32, "#de9e41", "#884b2b"], [14, 33, "#de9e41", "#884b2b"],
+            [59, 41, "#de9e41", "#884b2b"], [60, 41, "#e8c170", "#ad7757"], [59, 42, "#be772b", "#7a4841"], [60, 42, "#e8c170", "#884b2b"], [61, 42, "#e8c170", "#7a4841"]
+          ]
+        },
+        {
+          "note": "the top-right corner of the derrick crown block broken off, re-outlined along the break",
+          "pixels": [
+            [45, 1, "#090a14", "none"], [46, 1, "#090a14", "none"], [47, 1, "#090a14", "none"], [46, 2, "#577277", "none"],
+            [47, 2, "#577277", "none"], [48, 2, "#090a14", "none"], [48, 3, "#090a14", "none"],
+            [45, 2, "#577277", "#090a14"], [46, 3, "#202e37", "#090a14"], [47, 3, "#577277", "#090a14"]
+          ]
+        }
+      ]
+    }
+  ]
+}

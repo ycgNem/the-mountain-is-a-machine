@@ -1,0 +1,32 @@
+{
+  "batch": "terrain_t_l5_floor_rock",
+  "note": "PixelLab create_topdown_tileset 8613c15a-1491-472f-8801-aaf1d32d78d0 (2026-10-30), transition_size 0.25, view high top-down. lower: grey-green machined stone floor of fitted square slabs with dark green joints | upper: wall of ancient grey-green stone machinery with carved gear rims and pale grey lit edges | transition: carved stone face with a pale grey lip. Base tiles: lower 0155f671-a650-4467-894e-adfc9dcab9cc, upper c532a7f3-a60d-4bb6-bbff-16c0fb03ca6d. Imported by scripts/art/tileset.ts on 2026-10-30.",
+  "_settings": "mode standard (1 generation), tile_size 16, view high top-down (standard always draws it), shape_style round, enhance false, detail 'medium detail', shading 'basic shading'. No palette: standard refuses palette/palette_name/max_colors ('work with mode=pro only'); art:build snaps to Apollo. transition_size 0.25, transition_description 'carved stone face with a pale grey lip', boundary_amplitude 0.15, boundary_seed 2. Art plan prompts: lower 'grey-green machined stone floor of fitted square slabs with dark green joints', upper 'wall of ancient grey-green stone machinery with carved gear rims and pale grey lit edges'.",
+  "_rolls": "Kept 8613c15a-1491-472f-8801-aaf1d32d78d0 (art plan prompt) with the _fix recolour. Rejected the retry db659ac6-26ea-4c28-b549-5a85b06c63f2 (chained on this floor's base 0155f671; upper 'dark slate-grey wall of ancient stone machinery with carved gear rims and a lit pale grey ridge along its top edge'): the wall again came back as the floor's slabs, with a thinner lip. Raw rolls: art/raw/terrain/t_l5_floor_rock.r1.* and .r2.*. Base tiles (chain): lower 0155f671-a650-4467-894e-adfc9dcab9cc, upper c532a7f3-a60d-4bb6-bbff-16c0fb03ca6d.",
+  "terrain": [
+    {
+      "name": "t_l5_floor_rock",
+      "src": "art/edits/terrain/t_l5_floor_rock.png",
+      "_fix": {"from":"art/raw/terrain/t_l5_floor_rock.png","barrier":["#c7cfcc","#e7d5b3","#a8b5b2","#819796"],"rules":["upper:#577277=#394a50","upper:#394a50=#202e37","upper:#19332d=#151d28","upper:#202e37=#151d28","#e7d5b3=#c7cfcc","lower+3:#394a50=#25562e"],"why":"Floor and wall came back as the same #577277 slabs, told apart only by the lip: the wall (upper) goes two steps darker (#394a50 slabs, #202e37 joints, #151d28 shadows; STYLE L5 wall #202e37 #151d28) and the floor stays #577277 (3.83:1). The warm cream lip pixels #e7d5b3 go to pale grey #c7cfcc. The lip and its #819796 ridge separate the terrains in every tile. Review 3 A15: the floor's slab joints #394a50 go to the layer's own dark green #25562e (1.67:1 on the slab), so the deepest floor reads green-grey, not grey-blue: all 32 in tile 0, 145 px in all. 'lower+3' leaves the floor's 2 px next to a lip alone, its contact shadow under the wall, which turned into a green fringe round every wall when recoloured (t_l5_floor_conduit gets the same joints)."},
+      "tile": 16,
+      "tiles": [
+        { "rect": [0, 0], "corners": [0, 0, 0, 0] },
+        { "rect": [16, 0], "corners": [0, 0, 0, 1] },
+        { "rect": [32, 0], "corners": [0, 0, 1, 0] },
+        { "rect": [48, 0], "corners": [0, 0, 1, 1] },
+        { "rect": [0, 16], "corners": [0, 1, 0, 0] },
+        { "rect": [16, 16], "corners": [0, 1, 0, 1] },
+        { "rect": [32, 16], "corners": [0, 1, 1, 0] },
+        { "rect": [48, 16], "corners": [0, 1, 1, 1] },
+        { "rect": [0, 32], "corners": [1, 0, 0, 0] },
+        { "rect": [16, 32], "corners": [1, 0, 0, 1] },
+        { "rect": [32, 32], "corners": [1, 0, 1, 0] },
+        { "rect": [48, 32], "corners": [1, 0, 1, 1] },
+        { "rect": [0, 48], "corners": [1, 1, 0, 0] },
+        { "rect": [16, 48], "corners": [1, 1, 0, 1] },
+        { "rect": [32, 48], "corners": [1, 1, 1, 0] },
+        { "rect": [48, 48], "corners": [1, 1, 1, 1] }
+      ]
+    }
+  ]
+}

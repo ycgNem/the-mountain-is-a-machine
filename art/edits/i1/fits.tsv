@@ -1,0 +1,27 @@
+0	iron_ore	--map #4f8fba=#819796,#3c5e8b=#577277,#253a5e=#394a50
+1	copper_ore	
+2	stone	--map #4f8fba=#819796,#3c5e8b=#577277,#253a5e=#394a50
+4	copper_ingot	--cols 5,8 --rows 6
+5	brick	
+53	drill_bit	
+16	cobalt_ore	
+17	resin	
+18	cobalt_ingot	
+21	spore_dust	
+22	biofuel	
+23	insulation	
+26	chorus_crystal	
+27	cut_crystal	--map #253a5e=#3c5e8b
+28	crystal_grit	
+29	charged_crystal	--specks 3
+59	conductive_powder	--map #253a5e=#3c5e8b
+31	overcharged_crystal	--specks 3 --map #253a5e=#3c5e8b
+33	battery	
+61	circuit	
+35	emberite	
+36	aggregate	
+37	slag	--map #577277=#394a50,#394a50=#202e37,#341c27=#752438,#411d31=#752438,#1e1d39=#202e37,#3c5e8b=#394a50,#402751=#202e37,#253a5e=#202e37
+38	hot_ember_ingot	--map #d0da91=#e8c170,#a8ca58=#da863e --cols 4,9 --rows 4,9
+42	thrumstone	
+43	engine_glass	
+44	heartstone	

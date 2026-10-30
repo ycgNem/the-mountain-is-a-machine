@@ -1,0 +1,13 @@
+{
+  "batch": "ta_title",
+  "note": "Batch TA (art plan). create_image_pixflux 320x180, 6 seeds at 1 generation each, color_image = art/ref/apollo_swatch.png (forced Apollo palette), view 'side', shading 'medium shading', no_background false. Seeds 31101-31104 used the hand-blocked layout art/ref/title_layout.png (written by the first revision of scripts/art/title_layout.ts; kept as uploaded, upload:7107a0e4); seeds 31105-31106 used art/ref/title_layout_v2.png (upload:2a019143; node scripts/art/title_layout.ts --mountain art/raw/ta_title/seed31104_s200_md.png --out art/ref/title_layout_v2.png: seed 31104's mountain on the same blocking, bands moved so the Heart clears the buttons and footer, derrick kept under the tagline). Jobs: 31101 init strength 150 'highly detailed' (76ba11fa: rows of spikes and a literal heart symbol, rejected); 31102 s300 highly detailed (d03cf4f6: faithful but noisy sky and rock); 31103 s200 highly detailed (999d1703: caves full of candy dots, rejected); 31104 s200 medium detail (687c5c7b: best mountain, but a train on the surface and a quarry pit); 31105 v2 s300 medium detail (f1f2f15e: good drill rig, but rings in the caves and pseudo-text 'Tun 34' in the sky); 31106 v2 s350 medium detail (58314ea2: the pick). Free cleanup: node scripts/art/title_finish.ts (stray specks out of the logo band, seed 31105's drill rig from row 31 down with pale-gold lamps, L1 squiggles removed, L4 blobs repainted as basalt column clusters) -> art/edits/title_art.png. The top band (y 0-29) is a dark navy dawn sky, not pale: the game draws the logo in #e8c170 and the tagline in #a8b5b2 there (src/ui/windows.ts). Review: node scripts/art/title_mock.ts art/edits/title_art.png -> art/out/title/title_art-ui.png. The game cuts title_art out of the atlas (src/render/atlas.ts loadArt); there is no separate title file.",
+  "sprites": [
+    {
+      "name": "title_art",
+      "src": "art/edits/title_art.png",
+      "size": [320, 180],
+      "fit": "center",
+      "trim": false
+    }
+  ]
+}

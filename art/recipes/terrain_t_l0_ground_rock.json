@@ -1,0 +1,34 @@
+{
+  "batch": "terrain_t_l0_ground_rock",
+  "note": "PixelLab create_topdown_tileset ba862bdd-9818-4c48-9c51-82b475c4656f (2026-10-30), transition_size 0.25, view high top-down. lower: dusty ochre gravel ground with small tan and sand pebbles and a few dry olive grass tufts | upper: weathered sandstone boulders and cliff rock, pale sand tops lit from upper left, umber and dark brown south faces | transition: sandstone cliff lip. Base tiles: lower 947d3353-1d60-4ad0-94c5-3be7685450d2, upper 3cc680b7-06ed-4873-b0ba-dd253f532287. Imported by scripts/art/tileset.ts on 2026-10-30.",
+  "_settings": "mode standard (1 generation), tile_size 16, view high top-down (standard always draws it), shape_style round, enhance false, detail 'medium detail', shading 'basic shading'. No palette: standard refuses palette/palette_name/max_colors ('work with mode=pro only'); art:build snaps to Apollo. transition_size 0.25, transition_description 'sandstone cliff lip', boundary_amplitude 0.15, boundary_seed 2. Art plan prompts: lower 'dusty ochre gravel ground with small tan and sand pebbles and a few dry olive grass tufts', upper 'weathered sandstone boulders and cliff rock, pale sand tops lit from upper left, umber and dark brown south faces'.",
+  "_rolls": "Kept ba862bdd-9818-4c48-9c51-82b475c4656f (art plan prompt) with the _fix recolour: it came back with one pale gold (#e8c170, the UI money and selection colour) on ground and rock alike, told apart only by the brown cliff line. Rejected the retry c290637c-5f9e-4229-900c-d48af3e60d82 (lower 'light brown ochre gravel ground with small tan pebbles and a few dry olive grass tufts', upper 'rough red-brown sandstone cliff rock and boulders with a lit pale sand ridge along the top edge and dark brown crevices', transition 'sandstone cliff face with a lit pale sand lip'): the ground came back flat #884b2b and the pebbles, grass tufts and company yellow #de9e41 landed on the rock, so cliffs read as ground and the ground as a pit. Raw rolls: art/raw/terrain/t_l0_ground_rock.r1.* and .r2.*. Base tiles: lower 947d3353-1d60-4ad0-94c5-3be7685450d2, upper 3cc680b7-06ed-4873-b0ba-dd253f532287.",
+  "terrain": [
+    {
+      "name": "t_l0_ground_rock",
+      "src": "art/edits/terrain/t_l0_ground_rock.png",
+      "variantShare": 0.75,
+      "_variantShare": "Review 3 A3: three in four plain floor tiles come from t_l0_ground_rock_v1-v3 (redo.json): the gravel's #d7b594 dashes shifted 2 px and thinned, with two or three #d7b594 / #ad7757 pebbles. Its tile 0 repeated as a '3E3E' wallpaper over the first screen, so a high share.",
+      "_fix": {"from":"art/raw/terrain/t_l0_ground_rock.png","barrier":["#7a4841","#602c2c","#884b2b"],"rules":["lower:#e8c170=#c09473","lower:#e7d5b3=#d7b594","lower:#de9e41=#ad7757","lower:#c09473=#ad7757","lower:#be772b=#ad7757","upper:#e8c170=#e7d5b3","upper:#e7d5b3=#d7b594","upper:#de9e41=#d7b594","#602c2c=#4d2b32"],"why":"Ground (lower) to ochre #c09473 with #ad7757/#d7b594 grit, rock tops (upper) to pale sand #e7d5b3 with #d7b594 grit, cliff face #602c2c to #4d2b32 (STYLE L0 row). The brown cliff line separates the two terrains in every tile."},
+      "tile": 16,
+      "tiles": [
+        { "rect": [0, 0], "corners": [0, 0, 0, 0] },
+        { "rect": [16, 0], "corners": [0, 0, 0, 1] },
+        { "rect": [32, 0], "corners": [0, 0, 1, 0] },
+        { "rect": [48, 0], "corners": [0, 0, 1, 1] },
+        { "rect": [0, 16], "corners": [0, 1, 0, 0] },
+        { "rect": [16, 16], "corners": [0, 1, 0, 1] },
+        { "rect": [32, 16], "corners": [0, 1, 1, 0] },
+        { "rect": [48, 16], "corners": [0, 1, 1, 1] },
+        { "rect": [0, 32], "corners": [1, 0, 0, 0] },
+        { "rect": [16, 32], "corners": [1, 0, 0, 1] },
+        { "rect": [32, 32], "corners": [1, 0, 1, 0] },
+        { "rect": [48, 32], "corners": [1, 0, 1, 1] },
+        { "rect": [0, 48], "corners": [1, 1, 0, 0] },
+        { "rect": [16, 48], "corners": [1, 1, 0, 1] },
+        { "rect": [32, 48], "corners": [1, 1, 1, 0] },
+        { "rect": [48, 48], "corners": [1, 1, 1, 1] }
+      ]
+    }
+  ]
+}

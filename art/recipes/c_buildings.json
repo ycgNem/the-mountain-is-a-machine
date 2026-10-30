@@ -1,0 +1,114 @@
+{
+  "batch": "c_buildings",
+  "note": "C, the six 3x3 buildings (art plan batch C), 2026-10-30. The planned route, create_map_object in style-matching mode inside a mock scene with a 48x48 inpainting mask, was tried three times (3 generations) and never drew a building: it continued the scene instead (see _map_object_tests). So the batch used the plan's fallback, one create_1_direction_object job at size 48 (10 generations, 16 candidates, palette = the 46 Apollo hexes, palette_name Apollo, view top-down, no style images: anchors are 32 px and would have shrunk the output), PixelLab review object f60b823f-f493-4fa0-80f8-fb8fc618f24e. All 16 frames are kept untouched in art/raw/c/candidates/frame_<i>.png (slot map in _slots); every frame came back 100% Apollo with no partial alpha. The 6 picks were promoted with select_object_frames (tag c_buildings) and saved as art/raw/c/<name>.png, byte-identical to their frames (_object = the promoted object). Anchor fields (art plan issue 11; not read by art:build): every rect is [x, y, w, h] in final 48 x 48 sprite pixels, after trim and bottom-centre placement. _light = the light-source spots. _pit = the elevator's dark shaft opening for the code-drawn cab. _chute = the body's outermost opaque pixel on each side at the tile centres x or y = 8, 24, 40 (N and S give y at x = 8/24/40, E and W give x at y = 8/24/40): a chute on that side and tile attaches there (the bodies are 35-42 px wide, so a chute placed on the 48 px footprint edge would float 3-5 px off the north, east and west faces).",
+  "_prompt": "description: large square factory building sprite in high top-down 3/4 view, flat top and a thin south face, base filling the whole frame edge to edge, selective dark outline, lit from upper left, no ground shadow. Each item_description starts '<building> in high top-down 3/4 view, seen from above:' and describes the top surface and a thin plain south face; the full 16 lines are in _slots.",
+  "_slots": {
+    "0 hq a": "company headquarters office ... flat roof of company-yellow metal panels with white stencil marks, steel grey walls, short radio mast on the back-left roof corner, thin steel south face with a row of small lit windows",
+    "1 hq b (PICK)": "company headquarters building ... big flat company-yellow roof with a large white stencilled letter and two roof vents, steel grey trim, radio antenna at one corner, thin steel south face with small warm lit windows",
+    "2 hq c": "mining company head office ... flat roof split into company-yellow panels with white stencil stripes, small rooftop radio mast and dish, steel grey walls, thin south face with three small lit windows",
+    "3 depot a (PICK)": "company supply depot warehouse ... flat company-yellow roof panels with white stencil marks over the back half, open loading bay in the front half showing stacked wooden crates and steel barrels, steel frame, thin plain steel south face",
+    "4 depot b": "supply depot ... steel-framed storage yard with company-yellow roof panels on two sides, open floor stacked with crates and sacks, small pale-gold lamp, thin plain steel south face",
+    "5 depot c": "company stockpile warehouse ... steel building with a flat company-yellow roof and white stencilled arrows, a wide roof hatch open over stacked goods, thin plain steel south face",
+    "6 terminal a": "shipping terminal ... steel loading platform with a company-yellow gantry crane spanning a dark open cargo bay, stacked shipping crates, small notice board, thin plain steel south face",
+    "7 terminal b (PICK)": "freight shipping terminal ... steel dock with a company-yellow overhead crane frame, cargo containers on a platform, white stencil marks, thin plain steel south face",
+    "8 elevator a (PICK)": "freight elevator station ... steel headframe around a large dark open square shaft pit in the center, company-yellow rim around the pit, winch drum on the back edge, thin plain steel south face",
+    "9 elevator b": "mine shaft elevator station ... square steel platform with a big black square shaft opening in the middle, company-yellow safety rails around the opening, cable winch at the back, thin plain steel south face",
+    "10 elevator c": "freight lift station ... steel frame with a deep dark square pit filling the center, company-yellow edge stripes around the pit, pulley wheel at the back, thin plain steel south face",
+    "11 assay a": "assay laboratory ... steel walls with company-yellow roof trim, glass skylight dome, sample hopper, small cyan analyzer glow on the roof, thin plain steel south face",
+    "12 assay b (PICK)": "small company laboratory ... flat steel roof with company-yellow edges, a round glass dome with a pale cyan glow, rows of sample jars, a chimney vent, thin plain steel south face",
+    "13 node a (PICK)": "ancient alien engine node ... square block of carved grey-green stone with dark green joints, pale aqua glass conduits, round glowing aqua socket in the center, stone gear rims, thin plain stone south face",
+    "14 node b": "alien stone machine ... square carved grey-green stone engine with a round socket of pale aqua light in the middle, aqua glass channels running to the edges, dark green joints, thin plain stone south face",
+    "15 node c": "ancient engine node ... grey-green stone slab with a carved stone gear ring around a glowing pale aqua core, dark green glass inlays, thin plain stone south face"
+  },
+  "_rejected": {
+    "0 hq a, 2 hq c": "good, but 1 reads as the HQ at 1x on its own (the white HQ stencil on the company-yellow roof, as the code-drawn HQ has).",
+    "4 depot b": "an open yard of loose crates: a noisy silhouette that reads as clutter, not a building.",
+    "5 depot c": "a clean yellow box with chevrons and a hatch, but too close to the HQ's yellow-roof top view; 3's open bay of stacked goods is its own shape.",
+    "6 terminal a": "its dark cargo bay inside a steel frame reads like the elevator pit at 1x; 7's coloured containers say shipping and never read as a shaft.",
+    "9 elevator b": "the pit is split by a centre bar into two 10 px halves, no room for one cab.",
+    "10 elevator c": "yellow-and-black hazard stripes around the pit: the diagonal stripes belong to Extraction alone (STYLE Machine families).",
+    "11 assay a": "a hopper sticks out of the left face; 12 is the same lab, cleaner and symmetric.",
+    "14 node b, 15 node c": "flat slabs like 13 but darker: on the #394a50 L5 floor they sink at the 0.65 band; 13's #819796 stone stands out."
+  },
+  "_map_object_tests": {
+    "note": "create_map_object, style matching, custom inpainting mask, view high top-down, selective outline, medium shading, medium detail, 1 generation each. Backgrounds and masks: art/ref/c_scenes/ (c_hq*, made with scripts/art/mock.ts --b64). Raw results: art/raw/c/map_object_tests/. Review: node scripts/art/mapobj.ts <png> --rect <mask> --scene <scene> --out <prefix>.",
+    "1 e77177f3-26c0-4b67-a043-f8db120bd139": "144x144 L0 scene (c_hq.png), 48x48 mask at 48,48, two belts ending at the mask: returned the mask square 100% opaque as ground with the two belts joined by a corner piece. No building.",
+    "2 9a44b4cc-28d9-4f31-af5d-28cba56e8254": "112x112 'machine yard' (c_hq_t2.png: eight approved sprites around an empty 48x48 slot, no belts), mask at 32,32: returned 95% of the square as plain ground, every pixel identical to the background. No building.",
+    "3 d2ffe0c9-eec1-4377-a9ff-6e5210c8099b": "the same yard with the code-drawn b_hq under the mask as a composition hint (c_hq_t3.png): returned ground again; the placeholder was painted out. No building.",
+    "verdict": "In this mode the tool continues the background and ignores the description, whatever the context and whatever is under the mask; PixelLab's help desk says background_image is style context, not an inpainting canvas, and recommends a style-referenced object instead. So D and H skipped map_object too and went straight to their STYLE.md fallback."
+  },
+  "_spend": "13 generations: 3 map_object tests (3852.10 -> 3855.10) + the size-48 job (3855.10 -> 3865.10).",
+  "sprites": [
+    {
+      "name": "b_hq",
+      "src": "art/raw/c/b_hq.png",
+      "size": [48, 48],
+      "fit": "bottom",
+      "trim": true,
+      "_from": "C frame 1",
+      "_object": "3ddfa818-2e5a-46ae-a202-14a284d2b59d",
+      "light": [[9, 44, "#e8c170", 3], [33, 44, "#e8c170", 3]], "_light": [[8, 43, 8, 3], [32, 43, 8, 3]],
+      "note": "Company: flat #de9e41 roof with an #ebede9 'HQ' stencil, steel corner brackets, radio mast; the south face has two rows of lit #e8c170 windows and a door (the HQ never rotates). Body 42x43 at [3, 5]."
+    },
+    {
+      "name": "b_depot",
+      "src": "art/raw/c/b_depot.png",
+      "size": [48, 48],
+      "fit": "bottom",
+      "trim": true,
+      "_from": "C frame 3",
+      "_object": "6ddffdda-caea-4f58-90ad-c7b6cbc4d2be",
+      "_light": [],
+      "note": "Company: #de9e41 roof panels with #ebede9 stencil hatching over the back half, an open loading bay of crates and barrels in front (the depot never rotates). No lamp in the art, so no light spot. Body 42x39 at [3, 9]."
+    },
+    {
+      "name": "b_terminal",
+      "src": "art/raw/c/b_terminal.png",
+      "size": [48, 48],
+      "fit": "bottom",
+      "trim": true,
+      "_from": "C frame 7",
+      "_object": "ec348444-41f9-4d04-bbde-a028e8f54aa7",
+      "_light": [[5, 9, 1, 2], [42, 11, 2, 1]],
+      "note": "Company: a #de9e41 / #be772b gantry crane over a steel dock of coloured cargo containers, a pale grating along the front edge; the light spots are the two #e8c170 lamps on the gantry posts. Body 42x41 at [3, 7]."
+    },
+    {
+      "name": "b_elevator",
+      "src": "art/raw/c/b_elevator.png",
+      "size": [48, 48],
+      "fit": "bottom",
+      "trim": true,
+      "_from": "C frame 8",
+      "_object": "15596ffd-b3c3-45a4-a1c0-d98123ae6d68",
+      "pit": [13, 21, 21, 15],
+      "chute": { "N": [7, 10, 16], "E": [38, 40, 40], "S": [41, 46, 47], "W": [8, 6, 6] },
+      "_anchors": "pit and chute were notes (_pit, _chute) until review 3 A4; art:build now writes them to atlas.json \"anchors\". pit checked at 8x on the built sprite: x 13-33 is the dark interior inside the #be772b inner rim (x 12 and 34), y 21-24 the #151d28 back wall, y 25 #10141f, y 26-35 #090a14, y 36 the rim again. chute = the body's edge on each side along x or y = 8, 24, 40 (art:build checks it against the art).",
+      "_light": [],
+      "note": "Company: steel headframe with a winch on the back edge and a #de9e41 / #be772b rim around a dark shaft opening, plain steel south face (the station can be rotated). The pit is #151d28 / #10141f back wall (y 21-25) over #090a14 (y 25-35), 21x15 px, inside the yellow rim (x 11-35, y 19-37). NOTE for the renderer (before review 3): Renderer.drawCab (src/render/world.ts) filled a hard-coded [16, 14, 16, 18], which on this art covers the winch deck above the pit and leaves the pit's last 4 rows showing below the cab; it should draw into the pit anchor (a 16 px wide cab centred in x 13-33, up to 15 px tall). Body 35x41 at [6, 7]."
+    },
+    {
+      "name": "b_assay_lab",
+      "src": "art/raw/c/b_assay_lab.png",
+      "size": [48, 48],
+      "fit": "bottom",
+      "trim": true,
+      "_from": "C frame 12",
+      "_object": "c9872cfd-2e93-43dc-9fd6-9022abdbd2cf",
+      "_light": [[19, 18, 11, 10]],
+      "note": "Company: flat steel roof with #de9e41 edges, a round #a4dddb glass dome (the light spot: the analyzer glow), rows of sample jars, a vent stack; plain steel south face. Body 36x39 at [6, 9]."
+    },
+    {
+      "name": "b_engine_node",
+      "src": "art/edit/c/b_engine_node.png",
+      "size": [48, 48],
+      "fit": "bottom",
+      "trim": true,
+      "_from": "art/raw/c/b_engine_node.png (C frame 13)",
+      "_object": "15860f26-e211-4bd2-a78c-ae9dff3a817f",
+      "_fix": "node scripts/art/stretch.ts art/raw/c/b_engine_node.png --rect 4,5,40,40 --dup 41:5 --out art/edit/c/b_engine_node.png",
+      "light": [[23, 21, "#a4dddb", 7]], "_light": [[20, 18, 8, 8]],
+      "chute": { "N": [3, 4, 3], "E": [43, 42, 43], "S": [47, 45, 47], "W": [4, 5, 4] },
+      "note": "Alien: #819796 carved stone with #19332d / #25562e moss joints, #a4dddb glass conduits in a cross and a glowing core (the light spot). Free fix: the raw frame is a flat slab with a 3 px south face, so its first south-face row (source row 41) is repeated 5 more times: an 8 px stone front with the corner pillars and the conduit running down it, so the node stands as a block like b_attuner. Every row is a copy of a source row; no new colour. Body 40x45 at [4, 3]."
+    }
+  ]
+}

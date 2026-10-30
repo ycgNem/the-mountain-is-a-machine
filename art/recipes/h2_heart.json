@@ -1,0 +1,38 @@
+{
+  "batch": "h2_heart",
+  "note": "H2, the Heart re-roll (review 3 A12, approved by the owner: one paid job), 2026-10-30. Overrides h_heart.json by name; its pick (H frame 1) stays on record there. (Named h2_heart, not h_heart_2: recipes run in localeCompare order, which puts h_heart_2.json before h_heart.json, and the later one wins.) The first Heart cut its gear ring flat at the top and right canvas edges (77 opaque px in row 0, 85 in the last column) and its four diagonal conduit stubs ended on bare floor. One create_1_direction_object job at size 100 (10 generations, 4 candidates; generations_used 3,900.10 before, 3,910.10 after; the $2.00 credit untouched), review object 2d7ee6c3-b775-4e70-881e-d84371a1a209, palette = 16 Apollo colours of the Alien stone ramp (greys #090a14-#c7cfcc, #19332d #25562e #468232, #172038 #253a5e #3c5e8b, #1e1d39), palette_name 'Apollo (alien stone)', view top-down, no style images. Generated at 100 so the art, centred on the 112 canvas (fit center: art:build pads, never shrinks), can't reach the canvas edge. All 4 frames are kept untouched in art/raw/h2/candidates/frame_<i>.png (labels in art/raw/h2/labels.json); every frame came back inside its frame with 5-7 px clear on every side. The pick was promoted with select_object_frames (tag h2_heart) as object 59baacf8-c64b-4462-8249-b5f2b175be49 and saved as art/raw/h2/b_heart_dormant.png, byte-identical to frame 0. b_heart (awake) is a free recolour of it: 'node scripts/art/recolor.ts art/edit/h2/edits.json'.",
+  "_prompt": "description: 'round ancient alien engine sprite in high top-down 3/4 view, a complete circle centred in the frame with empty transparent space all round it, flat top and a thin stone south face, carved grey-green stone gear rings, dim dark blue gem core, selective dark outline, lit from upper left, no ground shadow'. Slot 0: 'the dormant Heart of the mountain seen from high above: one complete round gear of carved grey-green stone, its outer ring of gear teeth whole on every side, three concentric inner stone rings with dark green moss in the grooves, a dim faceted dark blue gem core in the centre, the whole circle well inside the frame with an 8 pixel margin on every side, nothing outside the ring'. Slot 1: 'a round ancient alien machine set into the floor, seen from above: a wide stone gear ring with teeth all the way round, inner rings stepping down to an unlit deep navy crystal core, grey-green stone with dark green joints, a thin stone rim on the south side, the full circle shown small enough to leave a clear margin on all four sides'. Slot 2: 'circular ancient engine core seen from high above: concentric carved stone rings in grey-green and slate, a toothed outer gear ring fully visible with no edge cut off, a dark blue glass gem in the middle, moss in the joints, lit from the upper left, the whole object sits inside the frame with space to spare on every side'. Slot 3: 'an old round stone gear mechanism seen from high above at a slight angle: a complete toothed outer ring, two inner carved rings and a dim blue crystal heart at the centre, grey-green stone with dark green moss, the whole round outline inside the frame with transparent background around it'. Lesson: no 'enormous' and no 'filling the frame' (the first job's wording), and no pipes or conduits in the prompt: all four came back whole and inside the frame.",
+  "_why": "Frame 0: a whole 16-tooth stone gear, 87 x 88, with a thin south face under the teeth, carved rings, a dark green glass channel round it (STYLE's L5 accent: #a4dddb light in #25562e glass, so the awake recolour lights it) and a faceted navy gem with a lit upper-left facet, like the first Heart's. Its colours are the Alien ramp only; the #090a14 linework is like the Drill's (1,130 px). The off-centre conduit under the Heart (CONDUITS x 54) stays as decided: it now shows in the margin beside the ring, entering and leaving the footprint.",
+  "_rejected": {
+    "1": "a low 3/4 view: an oval gear on a thick base plate (87 x 73), not the game's high top-down view.",
+    "2": "the cleanest rings, but the core is a round ball that reads as an eye or a button rather than a gem.",
+    "3": "the mossiest, with four stone bridges on the ring, but its gem is a literal heart shape: a health icon, not an ancient engine."
+  },
+  "_spend": "10 generations (3,900.10 -> 3,910.10).",
+  "sprites": [
+    {
+      "name": "b_heart_dormant",
+      "src": "art/raw/h2/b_heart_dormant.png",
+      "size": [112, 112],
+      "fit": "center",
+      "trim": true,
+      "_from": "H2 frame 0",
+      "_object": "59baacf8-c64b-4462-8249-b5f2b175be49",
+      "_light": [],
+      "core": [47, 46, 17, 18],
+      "note": "Alien: a whole grey-green #819796 / #577277 stone gear with 16 teeth, a #394a50 / #202e37 south face under the teeth, carved rings with #19332d / #25562e moss, a dark #25562e glass channel at radius 30-32 and a dim faceted #394a50 / #172038 / #3c5e8b gem core. 87x88 at [12, 12] (12 px of floor round it, like the 3x3 buildings' margins). core = the gem."
+    },
+    {
+      "name": "b_heart",
+      "src": "art/edit/h2/b_heart.png",
+      "size": [112, 112],
+      "fit": "center",
+      "trim": true,
+      "_from": "art/raw/h2/b_heart_dormant.png (H2 frame 0), recoloured",
+      "_fix": "node scripts/art/recolor.ts art/edit/h2/edits.json",
+      "light": [[55, 55, "#a4dddb", 8]], "_light": [[47, 46, 17, 18]],
+      "core": [47, 46, 17, 18],
+      "note": "The same Heart awake: the gem white-hot (#3c5e8b and its 4 glints -> #ebede9, #394a50 -> #a4dddb, #202e37 -> #73bed3, #172038 -> #4f8fba) and its glass channel lit (#25562e -> #a4dddb, #19332d -> #73bed3), 590 px; stone, moss and outline untouched. The light spot is the gem's centre."
+    }
+  ]
+}

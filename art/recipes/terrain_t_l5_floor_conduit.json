@@ -1,0 +1,32 @@
+{
+  "batch": "terrain_t_l5_floor_conduit",
+  "note": "PixelLab create_topdown_tileset 7eeaaf2a-c400-4b43-9fbd-520ea4a1d39d (2026-10-30), transition_size 0, view high top-down. lower: grey-green machined stone floor of fitted square slabs with dark green joints | upper: glowing pale aqua glass conduit channel set in dark green stone, bright aqua core line. Base tiles: lower 0155f671-a650-4467-894e-adfc9dcab9cc, upper 91783ebf-8d67-4d27-bb20-e25771242063. Imported by scripts/art/tileset.ts on 2026-10-30.",
+  "_settings": "mode standard (1 generation), tile_size 16, view high top-down (standard always draws it), enhance false, detail 'medium detail', shading 'basic shading'. No palette: standard refuses palette/palette_name/max_colors ('work with mode=pro only'); art:build snaps to Apollo. transition_size 0, shape_style square, boundary_amplitude 0, lower_base_tile_id 0155f671-a650-4467-894e-adfc9dcab9cc (t_l5_floor_rock lower) with its lower wording. Art plan upper: 'glowing pale aqua glass conduit channel set in dark green stone, bright aqua core line'.",
+  "_rolls": "Only roll: 7eeaaf2a-c400-4b43-9fbd-520ea4a1d39d, kept as generated until review 3 (A15 gave its floor joints the _fix below). A 1-cell conduit draws as a pale aqua glass half (#a4dddb, #ebede9 glints) and a dark #394a50/#19332d stone half, lit from the upper left; src/render/terrain.ts darkens #ebede9/#a4dddb/#73bed3/#4f8fba for dormant conduits. Floor tile 0 differs from t_l5_floor_rock's in 5 joint pixels (#19332d against #394a50). Base tiles: lower 0155f671-a650-4467-894e-adfc9dcab9cc, upper 91783ebf-8d67-4d27-bb20-e25771242063.",
+  "terrain": [
+    {
+      "name": "t_l5_floor_conduit",
+      "src": "art/edits/terrain/t_l5_floor_conduit.png",
+      "_fix": {"from":"art/raw/terrain/t_l5_floor_conduit.png","barrier":["#a4dddb","#ebede9","#19332d","#151d28","#25562e"],"rules":["lower:#394a50=#25562e"],"why":"Review 3 A15, as on t_l5_floor_rock: the floor's #394a50 joints to the layer's dark green #25562e, so the joints don't change colour along every conduit (364 px; tile 0's 27). The channel's dark stone half is #394a50 too and touches the floor joints (tile 10), so the barrier is the glass and every dark edge colour round that stone (#19332d #151d28 #25562e), which keeps the stone's #394a50 (upper) as it is; no leak. The floor-side rim of the glass is #394a50 floor and turns #25562e with the joints: aqua glass in a dark green rim, STYLE's L5 accent. No lip here, so no contact shadow to spare."},
+      "tile": 16,
+      "tiles": [
+        { "rect": [0, 0], "corners": [0, 0, 0, 0] },
+        { "rect": [16, 0], "corners": [0, 0, 0, 1] },
+        { "rect": [32, 0], "corners": [0, 0, 1, 0] },
+        { "rect": [48, 0], "corners": [0, 0, 1, 1] },
+        { "rect": [0, 16], "corners": [0, 1, 0, 0] },
+        { "rect": [16, 16], "corners": [0, 1, 0, 1] },
+        { "rect": [32, 16], "corners": [0, 1, 1, 0] },
+        { "rect": [48, 16], "corners": [0, 1, 1, 1] },
+        { "rect": [0, 32], "corners": [1, 0, 0, 0] },
+        { "rect": [16, 32], "corners": [1, 0, 0, 1] },
+        { "rect": [32, 32], "corners": [1, 0, 1, 0] },
+        { "rect": [48, 32], "corners": [1, 0, 1, 1] },
+        { "rect": [0, 48], "corners": [1, 1, 0, 0] },
+        { "rect": [16, 48], "corners": [1, 1, 0, 1] },
+        { "rect": [32, 48], "corners": [1, 1, 1, 0] },
+        { "rect": [48, 48], "corners": [1, 1, 1, 1] }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "batch": "terrain_t_l2_floor_rock",
+  "note": "PixelLab create_topdown_tileset 8e9b5354-8d17-4fcf-af89-1210dab17f93 (2026-10-30), transition_size 0.25, view high top-down. lower: violet stone cave floor with patches of dark green moss | upper: rough dark purple rock wall with a lit plum ridge along its top edge and shadowed crevices | transition: purple rock face with a lit plum lip. Base tiles: lower f624a9a8-df4d-44ee-993a-bd58b5656217, upper 21a3e119-7750-496c-9581-9292a893356b. Imported by scripts/art/tileset.ts on 2026-10-30.",
+  "_settings": "mode standard (1 generation), tile_size 16, view high top-down (standard always draws it), shape_style round, enhance false, detail 'medium detail', shading 'basic shading'. No palette: standard refuses palette/palette_name/max_colors ('work with mode=pro only'); art:build snaps to Apollo. transition_size 0.25, transition_description 'purple rock face with a lit plum lip', boundary_amplitude 0.15, boundary_seed 2. Retry prompts: lower 'violet stone cave floor with patches of dark green moss', upper 'rough dark purple rock wall with a lit plum ridge along its top edge and shadowed crevices'.",
+  "_rolls": "Kept the retry 8e9b5354-8d17-4fcf-af89-1210dab17f93: floor #402751 (1.53:1, the art plan's issue-1 base), wall #241527, plum #7a367b/#a23e8c lip. Rejected c0f6e1bb-e06b-404d-9670-054833c8d002 (art plan prompt: 'deep violet cave stone floor ...', '... near-black crevices'): floor #241527 at 1.14:1 fails the 1.4:1 rule and the wall is the void tint #090a14. Raw rolls: art/raw/terrain/t_l2_floor_rock.r1.* and .r2.*. Base tiles (chain): lower f624a9a8-df4d-44ee-993a-bd58b5656217, upper 21a3e119-7750-496c-9581-9292a893356b.",
+  "terrain": [
+    {
+      "name": "t_l2_floor_rock",
+      "src": "art/edits/terrain/t_l2_floor_rock.png",
+      "variantShare": 0.25,
+      "_variantShare": "One plain tile in four from t_l2_floor_rock_v1-v3 (redo.json; the renderer's default, written out since review 3 gave each set its own share).",
+      "_fix": {"from":"art/raw/terrain/t_l2_floor_rock.png","barrier":["#7a367b","#a23e8c"],"rules":["upper:#202e37=#1e1d39","upper:#411d31=#241527","upper:#341c27=#241527"],"why":"Wall shadows that snapped to teal grey and maroon go to the layer's #1e1d39/#241527. The floor is untouched."},
+      "tile": 16,
+      "tiles": [
+        { "rect": [0, 0], "corners": [0, 0, 0, 0] },
+        { "rect": [16, 0], "corners": [0, 0, 0, 1] },
+        { "rect": [32, 0], "corners": [0, 0, 1, 0] },
+        { "rect": [48, 0], "corners": [0, 0, 1, 1] },
+        { "rect": [0, 16], "corners": [0, 1, 0, 0] },
+        { "rect": [16, 16], "corners": [0, 1, 0, 1] },
+        { "rect": [32, 16], "corners": [0, 1, 1, 0] },
+        { "rect": [48, 16], "corners": [0, 1, 1, 1] },
+        { "rect": [0, 32], "corners": [1, 0, 0, 0] },
+        { "rect": [16, 32], "corners": [1, 0, 0, 1] },
+        { "rect": [32, 32], "corners": [1, 0, 1, 0] },
+        { "rect": [48, 32], "corners": [1, 0, 1, 1] },
+        { "rect": [0, 48], "corners": [1, 1, 0, 0] },
+        { "rect": [16, 48], "corners": [1, 1, 0, 1] },
+        { "rect": [32, 48], "corners": [1, 1, 1, 0] },
+        { "rect": [48, 48], "corners": [1, 1, 1, 1] }
+      ]
+    }
+  ]
+}

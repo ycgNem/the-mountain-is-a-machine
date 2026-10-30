@@ -1,0 +1,22 @@
+{
+  "src": "art/raw/p_portrait/mags_03.png",
+  "out": "art/edits/p_mags.png",
+  "note": "Mags Okafor radio portrait. Raw: create_image_pro job 9363d49f-5298-4b3f-9abe-13d88af9276c, candidate 3 of 25 (48x48, Apollo palette, no background). Run: node scripts/art/touchup.ts art/edits/p_mags.json --preview 8",
+  "ops": [
+    {
+      "op": "map",
+      "region": [20, 15, 38, 17],
+      "colors": { "#d0da91": "#e8c170" },
+      "reason": "hat brim highlight: pale lime #d0da91 is off the brass ramp (STYLE: #602c2c #884b2b #be772b #de9e41 #e8c170); top it at #e8c170"
+    },
+    {
+      "op": "set",
+      "pixels": [
+        [37, 43, "#c09473", "#de9e41"],
+        [37, 44, "#c09473", "#de9e41"],
+        [38, 44, "#c09473", "#be772b"]
+      ],
+      "reason": "a stray tan blob on the jacket's lower right becomes a small company-yellow patch, like the code-drawn portrait's"
+    }
+  ]
+}

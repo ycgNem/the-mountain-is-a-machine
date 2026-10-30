@@ -1,0 +1,481 @@
+{
+  "note": "Free family-accent fixes for M2 (art plan style issue 7, STYLE.md 'Machine families'). Raw downloads stay untouched; run 'node scripts/art/recolor.ts art/edit/m2/edits.json' to rebuild every file here. Coordinates are source pixels.",
+  "edits": [
+    {
+      "name": "b_miner",
+      "src": "art/raw/m1/b_miner.png",
+      "out": "art/edit/m2/b_miner.png",
+      "note": "Extraction stripes: pale gold #e8c170 / #341c27 to the spec's #de9e41 / #151d28 (cream and tan stripe edges follow); the lamp (x 13-18, y 2-8) keeps its #e8c170 glow.",
+      "ops": [
+        {
+          "map": {
+            "#e8c170": "#de9e41",
+            "#341c27": "#151d28",
+            "#e7d5b3": "#e8c170",
+            "#c09473": "#be772b",
+            "#ad7757": "#be772b"
+          },
+          "except": [
+            [
+              13,
+              2,
+              6,
+              7
+            ]
+          ],
+          "expect": 138
+        }
+      ]
+    },
+    {
+      "name": "b_harvester",
+      "src": "art/raw/m1/b_harvester.png",
+      "out": "art/edit/m2/b_harvester.png",
+      "note": "Extraction stripes to #de9e41 / #151d28, as b_miner.",
+      "ops": [
+        {
+          "map": {
+            "#e8c170": "#de9e41",
+            "#341c27": "#151d28",
+            "#e7d5b3": "#e8c170",
+            "#c09473": "#be772b",
+            "#ad7757": "#be772b"
+          },
+          "expect": 99
+        }
+      ]
+    },
+    {
+      "name": "b_spore_collector",
+      "src": "art/raw/m1/b_spore_collector.png",
+      "out": "art/edit/m2/b_spore_collector.png",
+      "note": "Extraction stripes to #de9e41 / #151d28, as b_miner.",
+      "ops": [
+        {
+          "map": {
+            "#e8c170": "#de9e41",
+            "#341c27": "#151d28",
+            "#e7d5b3": "#e8c170",
+            "#c09473": "#be772b",
+            "#ad7757": "#be772b"
+          },
+          "expect": 86
+        }
+      ]
+    },
+    {
+      "name": "b_smelter",
+      "src": "art/raw/m1/b_smelter.png",
+      "out": "art/edit/m2/b_smelter.png",
+      "note": "Heat brick: the earth browns (#341c27 #4d2b32 #602c2c #7a4841 #884b2b #ad7757, also the L1 floor and rock colours) to the rust/heat ramp at matching values (#241527 #411d31 #752438 #a53030 #a53030 #cf573c), so Heat reads as #752438/#a53030 brick and stands off the umber L1 floor. Mouth and steel bands unchanged.",
+      "ops": [
+        {
+          "map": {
+            "#341c27": "#241527",
+            "#4d2b32": "#411d31",
+            "#602c2c": "#752438",
+            "#7a4841": "#a53030",
+            "#884b2b": "#a53030",
+            "#ad7757": "#cf573c"
+          },
+          "expect": 268
+        }
+      ]
+    },
+    {
+      "name": "b_foundry",
+      "src": "art/raw/m1/b_foundry.png",
+      "out": "art/edit/m2/b_foundry.png",
+      "note": "Heat brick to the rust/heat ramp, as b_smelter.",
+      "ops": [
+        {
+          "map": {
+            "#341c27": "#241527",
+            "#4d2b32": "#411d31",
+            "#602c2c": "#752438",
+            "#7a4841": "#a53030",
+            "#884b2b": "#a53030",
+            "#ad7757": "#cf573c"
+          },
+          "expect": 280
+        }
+      ]
+    },
+    {
+      "name": "b_press",
+      "src": "art/raw/m1/b_press.png",
+      "out": "art/edit/m2/b_press.png",
+      "note": "Fabrication: sand rivet dots to brass #be772b; the steel ramp lifted one step (#202e37>#394a50>#577277>#819796>#a8b5b2>#c7cfcc) so the body is the spec's #577277/#819796 steel, not the belt's #394a50 or the Crystal family's dark steel; 3 stray blue pixels to steel. The brown die keeps its colours.",
+      "ops": [
+        {
+          "map": {
+            "#d7b594": "#be772b",
+            "#202e37": "#394a50",
+            "#394a50": "#577277",
+            "#577277": "#819796",
+            "#819796": "#a8b5b2",
+            "#a8b5b2": "#c7cfcc",
+            "#3c5e8b": "#577277",
+            "#253a5e": "#394a50"
+          },
+          "expect": 515
+        }
+      ]
+    },
+    {
+      "name": "b_assembler",
+      "src": "art/raw/m1/b_assembler.png",
+      "out": "art/edit/m2/b_assembler.png",
+      "note": "Fabrication: the #3c5e8b blue south face and side panels to #577277 steel (#253a5e/#172038 to #394a50/#202e37), the #a4dddb edge line to #a8b5b2, and the five light dots along the front edge of the top plate to brass #be772b rivets.",
+      "ops": [
+        {
+          "map": {
+            "#3c5e8b": "#577277",
+            "#253a5e": "#394a50",
+            "#172038": "#202e37",
+            "#a4dddb": "#a8b5b2"
+          },
+          "expect": 140
+        },
+        {
+          "pixels": [
+            [
+              8,
+              22,
+              "#c7cfcc",
+              "#be772b"
+            ],
+            [
+              13,
+              22,
+              "#c7cfcc",
+              "#be772b"
+            ],
+            [
+              18,
+              22,
+              "#c7cfcc",
+              "#be772b"
+            ],
+            [
+              23,
+              22,
+              "#c7cfcc",
+              "#be772b"
+            ],
+            [
+              28,
+              22,
+              "#c7cfcc",
+              "#be772b"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "b_pressure_forge",
+      "src": "art/raw/m2/b_pressure_forge.png",
+      "out": "art/edit/m2/b_pressure_forge.png",
+      "note": "M2 frame 22: Heat brick to the rust/heat ramp, as b_smelter.",
+      "ops": [
+        {
+          "map": {
+            "#341c27": "#241527",
+            "#4d2b32": "#411d31",
+            "#602c2c": "#752438",
+            "#7a4841": "#a53030",
+            "#884b2b": "#a53030",
+            "#ad7757": "#cf573c"
+          },
+          "expect": 330
+        }
+      ]
+    },
+    {
+      "name": "b_thermal_extractor",
+      "src": "art/raw/m2/b_thermal_extractor.png",
+      "out": "art/edit/m2/b_thermal_extractor.png",
+      "note": "M2 frame 28: Heat brick to the rust/heat ramp, as b_smelter.",
+      "ops": [
+        {
+          "map": {
+            "#341c27": "#241527",
+            "#4d2b32": "#411d31",
+            "#602c2c": "#752438",
+            "#7a4841": "#a53030",
+            "#884b2b": "#a53030",
+            "#ad7757": "#cf573c"
+          },
+          "expect": 237
+        }
+      ]
+    },
+    {
+      "name": "b_cooling_bath",
+      "src": "art/raw/m2/b_cooling_bath.png",
+      "out": "art/edit/m2/b_cooling_bath.png",
+      "note": "M2 frame 56: its darker brick face (#4d2b32 bricks, #411d31 shade, #341c27 mortar) and copper rim (#884b2b / #7a4841) to #a53030 / #752438 / #411d31 and #a53030 / #752438, matching the recoloured smelter and foundry.",
+      "ops": [
+        {
+          "map": {
+            "#4d2b32": "#a53030",
+            "#411d31": "#752438",
+            "#341c27": "#411d31",
+            "#884b2b": "#a53030",
+            "#7a4841": "#752438"
+          },
+          "expect": 419
+        }
+      ]
+    },
+    {
+      "name": "x_l2_mushroom_tall",
+      "src": "art/raw/m2/x_l2_mushroom_tall.png",
+      "out": "art/edit/m2/x_l2_mushroom_tall.png",
+      "note": "M2 frame 50: the pink #df84a5 stem (the glowcap resource colour) to dull #819796, the maroon-brown cap underside (#602c2c / #4d2b32) to L2 violet #402751 / #241527. Decor stays dull, in its layer colours.",
+      "ops": [
+        {
+          "map": {
+            "#df84a5": "#819796",
+            "#602c2c": "#402751",
+            "#4d2b32": "#241527"
+          },
+          "expect": 108
+        }
+      ]
+    },
+    {
+      "name": "b_separator",
+      "src": "art/raw/m2/b_separator.png",
+      "out": "art/edit/m2/b_separator.png",
+      "note": "M2 frame 14: the small white indicator cross on the south face painted out to the bowl copper #884b2b (south faces stay plain).",
+      "ops": [
+        {
+          "pixels": [
+            [
+              15,
+              23,
+              "#a4dddb",
+              "#884b2b"
+            ],
+            [
+              16,
+              23,
+              "#ebede9",
+              "#884b2b"
+            ],
+            [
+              15,
+              24,
+              "#ebede9",
+              "#884b2b"
+            ],
+            [
+              16,
+              24,
+              "#a8b5b2",
+              "#884b2b"
+            ],
+            [
+              15,
+              25,
+              "#a8b5b2",
+              "#884b2b"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "b_precision_assembler",
+      "src": "art/raw/m1/b_precision_assembler.png",
+      "out": "art/edit/m2/b_precision_assembler.png",
+      "note": "M1 frame 20: the #3c5e8b blue glass south face (with #a4dddb edge and #819796 diagonal glints, which read as the Chemistry family glass) to plain #577277 steel; the five light dots on the plate edge and the south-face corners to brass #be772b rivets. The small glass dome and the cyan indicator on top stay.",
+      "ops": [
+        {
+          "map": {
+            "#a4dddb": "#a8b5b2",
+            "#3c5e8b": "#577277"
+          },
+          "region": [
+            2,
+            20,
+            28,
+            2
+          ],
+          "expect": 27
+        },
+        {
+          "map": {
+            "#3c5e8b": "#577277",
+            "#253a5e": "#394a50",
+            "#172038": "#202e37",
+            "#819796": "#577277",
+            "#a4dddb": "#a8b5b2"
+          },
+          "region": [
+            2,
+            22,
+            28,
+            9
+          ],
+          "expect": 177
+        },
+        {
+          "map": {
+            "#3c5e8b": "#577277"
+          },
+          "region": [
+            30,
+            15,
+            1,
+            6
+          ],
+          "expect": 4
+        },
+        {
+          "pixels": [
+            [
+              4,
+              19,
+              "#ebede9",
+              "#be772b"
+            ],
+            [
+              19,
+              19,
+              "#c7cfcc",
+              "#be772b"
+            ],
+            [
+              27,
+              19,
+              "#c7cfcc",
+              "#be772b"
+            ],
+            [
+              4,
+              28,
+              "#c7cfcc",
+              "#be772b"
+            ],
+            [
+              27,
+              28,
+              "#c7cfcc",
+              "#be772b"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "b_generator",
+      "src": "art/raw/m2/b_generator.png",
+      "out": "art/edit/m2/b_generator.png",
+      "note": "M2 frame 4: every M2 generator put its firebox on the south face. Free fix: the south face (rows 21-31) mirrored from its plain left half, so it shows four copper pipes, a centre seam and four feet instead of the fire hatch; the 4 stray plinth pixels under the seam cleared; the copper valve on the right drum lid replaced by a 3x3 glowing fire port (#cf573c #e8c170 #da863e #ebede9 #a53030), the light spot now on the top face.",
+      "ops": [
+        {
+          "copy": [
+            1,
+            21,
+            15,
+            11
+          ],
+          "to": [
+            16,
+            21
+          ],
+          "flipX": true
+        },
+        {
+          "pixels": [
+            [
+              15,
+              30,
+              "#090a14",
+              "none"
+            ],
+            [
+              16,
+              30,
+              "#090a14",
+              "none"
+            ],
+            [
+              15,
+              31,
+              "#090a14",
+              "none"
+            ],
+            [
+              16,
+              31,
+              "#090a14",
+              "none"
+            ]
+          ]
+        },
+        {
+          "pixels": [
+            [
+              21,
+              11,
+              "#151d28",
+              "#cf573c"
+            ],
+            [
+              22,
+              11,
+              "#7a4841",
+              "#e8c170"
+            ],
+            [
+              23,
+              11,
+              "#151d28",
+              "#cf573c"
+            ],
+            [
+              21,
+              12,
+              "#202e37",
+              "#da863e"
+            ],
+            [
+              22,
+              12,
+              "#7a4841",
+              "#ebede9"
+            ],
+            [
+              23,
+              12,
+              "#151d28",
+              "#da863e"
+            ],
+            [
+              21,
+              13,
+              "#202e37",
+              "#a53030"
+            ],
+            [
+              22,
+              13,
+              "#202e37",
+              "#cf573c"
+            ],
+            [
+              23,
+              13,
+              "#202e37",
+              "#a53030"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

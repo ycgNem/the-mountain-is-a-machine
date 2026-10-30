@@ -1,0 +1,32 @@
+{
+  "batch": "terrain_t_l2_floor_water",
+  "note": "PixelLab create_topdown_tileset 9f1a62cd-9c63-4321-bae9-70b093f38cd5 (2026-10-30), transition_size 0, view high top-down. lower: violet stone cave floor with patches of dark green moss | upper: still blue underground pool water with darker navy depths, lighter blue ripples and a few pale aqua glints. Base tiles: lower f624a9a8-df4d-44ee-993a-bd58b5656217, upper dfb44f7a-921f-457d-8b6a-de96cc648083. Imported by scripts/art/tileset.ts on 2026-10-30.",
+  "_settings": "mode standard (1 generation), tile_size 16, view high top-down (standard always draws it), shape_style round, enhance false, detail 'medium detail', shading 'basic shading'. No palette: standard refuses palette/palette_name/max_colors ('work with mode=pro only'); art:build snaps to Apollo. transition_size 0, boundary_amplitude 0.1, boundary_seed 2, lower_base_tile_id f624a9a8-df4d-44ee-993a-bd58b5656217 (t_l2_floor_rock lower) with its lower wording. Retry upper: 'still blue underground pool water with darker navy depths, lighter blue ripples and a few pale aqua glints'.",
+  "_rolls": "Kept the retry 9f1a62cd-9c63-4321-bae9-70b093f38cd5. Rejected e3b60c47-44a5-45c9-b29a-af7ddd8ea366 (art plan upper 'still dark navy underground water with a few pale aqua glints'): the water snapped to the void tint #090a14 (93% of the water tile), which STYLE forbids as a terrain fill and which reads as unrevealed dark. Raw rolls: art/raw/terrain/t_l2_floor_water.r1.* and .r2.*. Base tiles: lower f624a9a8-df4d-44ee-993a-bd58b5656217, upper dfb44f7a-921f-457d-8b6a-de96cc648083.",
+  "terrain": [
+    {
+      "name": "t_l2_floor_water",
+      "src": "art/edits/terrain/t_l2_floor_water.png",
+      "_fix": {"from":"art/raw/terrain/t_l2_floor_water.png","rules":["#577277=#3c5e8b","#3c5e8b=#253a5e","#394a50=#253a5e","#202e37=#1e1d39","#411d31=#241527","#341c27=#241527"],"why":"The teal raw water snapped to grey #577277; moved one step down onto STYLE's water ramp (#253a5e #3c5e8b, #4f8fba ripples). Shore shadows as in t_l2_floor_rock. Floor tile 0 equals t_l2_floor_rock's pixel for pixel."},
+      "tile": 16,
+      "tiles": [
+        { "rect": [0, 0], "corners": [0, 0, 0, 0] },
+        { "rect": [16, 0], "corners": [0, 0, 0, 1] },
+        { "rect": [32, 0], "corners": [0, 0, 1, 0] },
+        { "rect": [48, 0], "corners": [0, 0, 1, 1] },
+        { "rect": [0, 16], "corners": [0, 1, 0, 0] },
+        { "rect": [16, 16], "corners": [0, 1, 0, 1] },
+        { "rect": [32, 16], "corners": [0, 1, 1, 0] },
+        { "rect": [48, 16], "corners": [0, 1, 1, 1] },
+        { "rect": [0, 32], "corners": [1, 0, 0, 0] },
+        { "rect": [16, 32], "corners": [1, 0, 0, 1] },
+        { "rect": [32, 32], "corners": [1, 0, 1, 0] },
+        { "rect": [48, 32], "corners": [1, 0, 1, 1] },
+        { "rect": [0, 48], "corners": [1, 1, 0, 0] },
+        { "rect": [16, 48], "corners": [1, 1, 0, 1] },
+        { "rect": [32, 48], "corners": [1, 1, 1, 0] },
+        { "rect": [48, 48], "corners": [1, 1, 1, 1] }
+      ]
+    }
+  ]
+}

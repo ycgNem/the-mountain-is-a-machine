@@ -1,0 +1,423 @@
+{
+  "batch": "i_items",
+  "note": "I1, item icons (art plan batch I). 2026-10-30. One create_1_direction_object job: size 16, view top-down, palette = the 46 Apollo hexes, palette_name Apollo, name i1_items, 64 candidates, 10 generations. PixelLab review object 7dcd92f9-aa7d-4e83-ac5e-b034655935de (job 8ce39b00-faee-4362-b242-b4d6ba3b2091). All 64 frames are kept untouched in art/raw/i1/candidates/frame_<i>.png (slot order in art/raw/i1/slots.json and _slots). Every frame came back on Apollo with a 1 px dark-indigo (#1e1d39) or ramp-dark outline, but 61 of 64 fill 14x14 of the 16 px frame, over the 12x12 item envelope art:build enforces. So each pick is a recorded free hand-edit (scripts/art/itemfit.ts, parameters in _fix and art/edits/i1/fits.tsv): snap to Apollo, optional whole-colour ramp fixes, remove the most redundant whole rows and columns (or the ones named) until it fits, then close the outline in #090a14. Nothing is resampled; the raw frames stay as downloaded. Rejects fall back to code-drawn art until the anchored I2 re-roll (i_items_2.json); see _rejected.",
+  "_prompt": "description: tiny game item icon, centered with an empty transparent margin, closed 1px dark navy outline, lit from upper left, no shadow. item_descriptions: the art plan's per-item lines (art.md batch I) verbatim, in PLAN 7.1 order, then 19 second slots.",
+  "_slots": "0-44 the 45 items in PLAN 7.1 order (iron_ore ... heartstone); 45-63 second slots: steel_ingot, cobalt_ingot, cold_ember_ingot, reinforced_plate, heat_shield, heartstone, copper_wire, motor, drill_bit, cobalt_drill_head, insulation, filter, cut_crystal, charged_crystal, conductive_powder, battery, circuit, resonant_core, ember_core.",
+  "_rejected": {
+    "i_iron_ingot": "3: dull slate bar, only 2 px at 3:1 on the belt, no strong top highlight",
+    "i_iron_plate": "6: plain square filling the frame, cyan corner marks instead of dark rivets (cyan is the crystal ramp)",
+    "i_gear": "7: pale cyan and blue gear, reads as crystal, not iron (issue 6)",
+    "i_copper_wire": "8, 51: drawn as a jar or barrel with orange coils inside",
+    "i_reinforced_plate": "9, 48: cobalt-blue panel with a cross brace, reads as a window or as cobalt",
+    "i_coal": "10: near-black lump with 1 px at 3:1 and no glossy facets (issue 6)",
+    "i_steel_ingot": "11, 45: white bar shaded in navy and cyan, reads blue; mapped to the steel greys it went lumpy",
+    "i_steel_beam": "12: drawn diagonally, 14x14; a long item may use 14 on one axis only",
+    "i_motor": "13, 52: unreadable orange and blue tangle",
+    "i_sapstone": "15: blue rock ringed by a red-orange crust, reads as a lava donut; the resin should be amber-gold",
+    "i_glowcap": "19: the cap is a checkerboard of transparent holes",
+    "i_mycelium": "20: a green twisted vine, not pale fibre",
+    "i_filter": "24, 56: leafy green disc, reads as a cabbage; no brass rim",
+    "i_cobalt_drill_head": "25, 54: tangled diagonal shape; 54 is 14x15",
+    "i_resonant_core": "32, 62: a mosaic of red, green, cyan and brass pixels",
+    "i_cold_ember_ingot": "39, 47: mid-grey (#577277) stone-like bar, too close to iron (issue 6), no #752438 cracks",
+    "i_ember_core": "40, 63: the two glowing vents read as a face",
+    "i_heat_shield": "41, 49: ragged outline and stray blue and green pixels",
+    "alternates_not_used": "14 drill_bit (bluer than 53), 18/46 cobalt_ingot (46 has a #4f8fba body, lighter than the cobalt ramp), 23/55 insulation (near-identical), 27/57 cut_crystal (near-identical), 29/58 charged_crystal (58 keeps spark specks that a closed rim turns into black dots), 30/59 conductive_powder (30 has a tail), 33/60 battery (near-identical), 34/61 circuit (34 has 2 px at 3:1), 44/50 heartstone (50 has stray green)"
+  },
+  "_replaced": {
+    "i_cut_crystal": "I1 frame 27 (object ff0c7db2-6c21-4b79-b07d-750c560d529e; fitted copy kept in art/edits/i1/i_cut_crystal.png) was approved, then replaced by the I2 hexagon in i_items_2.json: the I1 gem is round and at 1x reads like charged_crystal."
+  },
+  "_anchors": "The I2 style images are 8 of these sprites as art:build places them (scripts/art/anchors.ts -> art/ref/anchors_i1/): i_iron_ore, i_copper_ingot, i_engine_glass, i_drill_bit, i_chorus_crystal, i_circuit, i_heartstone, i_spore_dust (ore, ingot, plate, crisp metal part in place of a gear, crystal, assembly, core, powder).",
+  "sprites": [
+    {
+      "name": "i_iron_ore",
+      "src": "art/edits/i1/i_iron_ore.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 0,
+      "_object": "d38b5315-4d4d-487f-b5f8-5d32d23c8fd6",
+      "_raw": "art/raw/i1/candidates/frame_0.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_0.png iron_ore art/edits/i1/i_iron_ore.png --map #4f8fba=#819796,#3c5e8b=#577277,#253a5e=#394a50 -> 14x14 -> 12x12; removed columns [4,6] rows [1,11]; map #4f8fba=#819796,#3c5e8b=#577277,#253a5e=#394a50; 32 rim pixels to #090a14",
+      "note": "Raw ore: slate-grey rock with rust flecks; its blue specks mapped to the iron greys (issue 6)."
+    },
+    {
+      "name": "i_copper_ore",
+      "src": "art/edits/i1/i_copper_ore.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 1,
+      "_object": "1cbd1abb-8c12-4e51-aa79-d526108f22a1",
+      "_raw": "art/raw/i1/candidates/frame_1.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_1.png copper_ore art/edits/i1/i_copper_ore.png -> 14x14 -> 12x12; removed columns [1,8] rows [1,3]; 32 rim pixels to #090a14",
+      "note": "Raw ore: umber rock with copper-orange and gold flecks."
+    },
+    {
+      "name": "i_stone",
+      "src": "art/edits/i1/i_stone.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 2,
+      "_object": "4b7229c1-4b14-4016-a1f6-abf570f577a2",
+      "_raw": "art/raw/i1/candidates/frame_2.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_2.png stone art/edits/i1/i_stone.png --map #4f8fba=#819796,#3c5e8b=#577277,#253a5e=#394a50 -> 14x14 -> 12x12; removed columns [6,9] rows [1,12]; map #4f8fba=#819796,#3c5e8b=#577277,#253a5e=#394a50; 34 rim pixels to #090a14",
+      "note": "Raw: pale grey granite; its navy shading mapped to the grey ramp so it reads as stone, not ice."
+    },
+    {
+      "name": "i_copper_ingot",
+      "src": "art/edits/i1/i_copper_ingot.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 4,
+      "_object": "ff160dc6-6eec-4a2a-8c09-04a4479910b0",
+      "_raw": "art/raw/i1/candidates/frame_4.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_4.png copper_ingot art/edits/i1/i_copper_ingot.png --cols 5,8 --rows 6 -> 14x13 -> 12x12; removed columns [5,8] rows [6]; 28 rim pixels to #090a14",
+      "note": "Ingot: bright copper bar with a pale gold top. Lines picked by hand (the automatic choice cut the bar into a wedge)."
+    },
+    {
+      "name": "i_brick",
+      "src": "art/edits/i1/i_brick.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 5,
+      "_object": "3a8f32d3-8bc3-415e-bf54-c67a019feb92",
+      "_raw": "art/raw/i1/candidates/frame_5.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_5.png brick art/edits/i1/i_brick.png -> 14x14 -> 12x12; removed columns [3,11] rows [4,12]; 30 rim pixels to #090a14",
+      "note": "Block: rust-red brick with a red-orange top face."
+    },
+    {
+      "name": "i_drill_bit",
+      "src": "art/edits/i1/i_drill_bit.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 53,
+      "_object": "ef92269c-f0a1-47e5-bb61-21523ef62786",
+      "_raw": "art/raw/i1/candidates/frame_53.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_53.png drill_bit art/edits/i1/i_drill_bit.png -> 8x14 -> 8x14; removed columns [] rows []; 29 rim pixels to #090a14",
+      "note": "Part: silver conical bit with a brass collar; a long item, 8x14. Already inside the envelope."
+    },
+    {
+      "name": "i_cobalt_ore",
+      "src": "art/edits/i1/i_cobalt_ore.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 16,
+      "_object": "e1da171a-3498-4ed5-9ace-995ae795b956",
+      "_raw": "art/raw/i1/candidates/frame_16.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_16.png cobalt_ore art/edits/i1/i_cobalt_ore.png -> 12x12 -> 12x12; removed columns [] rows []; 20 rim pixels to #090a14",
+      "note": "Washed ore: deep cobalt nugget, 12x12 as drawn. Its one white glint is the only pixel at 3:1 on the belt: the cobalt ramp tops out at #4f8fba (2.63:1), see the report."
+    },
+    {
+      "name": "i_resin",
+      "src": "art/edits/i1/i_resin.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 17,
+      "_object": "42278913-e677-4072-a0d9-36f1212b6933",
+      "_raw": "art/raw/i1/candidates/frame_17.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_17.png resin art/edits/i1/i_resin.png -> 10x14 -> 10x12; removed columns [] rows [1,3]; 28 rim pixels to #090a14",
+      "note": "Amber drop with a gold highlight."
+    },
+    {
+      "name": "i_cobalt_ingot",
+      "src": "art/edits/i1/i_cobalt_ingot.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 18,
+      "_object": "1e416d1a-1e7e-4083-a8fb-218c03f07313",
+      "_raw": "art/raw/i1/candidates/frame_18.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_18.png cobalt_ingot art/edits/i1/i_cobalt_ingot.png -> 14x14 -> 12x12; removed columns [2,9] rows [5,8]; 14 rim pixels to #090a14",
+      "note": "Ingot: deep cobalt bar with a #4f8fba top; no pixel reaches 3:1 on the belt inside the cobalt ramp (rule conflict, see the report)."
+    },
+    {
+      "name": "i_spore_dust",
+      "src": "art/edits/i1/i_spore_dust.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 21,
+      "_object": "d6f0bf81-3f18-4574-8622-a3c9e55bacaf",
+      "_raw": "art/raw/i1/candidates/frame_21.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_21.png spore_dust art/edits/i1/i_spore_dust.png -> 14x11 -> 12x11; removed columns [1,12] rows []; 35 rim pixels to #090a14",
+      "note": "Powder: magenta and pink heap with pale specks."
+    },
+    {
+      "name": "i_biofuel",
+      "src": "art/edits/i1/i_biofuel.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 22,
+      "_object": "a502768f-7af4-486d-83b5-89dd45d4b8c0",
+      "_raw": "art/raw/i1/candidates/frame_22.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_22.png biofuel art/edits/i1/i_biofuel.png -> 8x14 -> 8x12; removed columns [] rows [7,8]; 30 rim pixels to #090a14",
+      "note": "Glass vial of lime fuel with a dark cap."
+    },
+    {
+      "name": "i_insulation",
+      "src": "art/edits/i1/i_insulation.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 23,
+      "_object": "1b625c8f-91ce-4e95-9fa1-31b815465650",
+      "_raw": "art/raw/i1/candidates/frame_23.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_23.png insulation art/edits/i1/i_insulation.png -> 14x14 -> 12x12; removed columns [1,2] rows [10,11]; 31 rim pixels to #090a14",
+      "note": "Amber-banded roll of pale fibre batting."
+    },
+    {
+      "name": "i_chorus_crystal",
+      "src": "art/edits/i1/i_chorus_crystal.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 26,
+      "_object": "d81708f7-42b5-4ff3-aa58-8e3a2f2b069e",
+      "_raw": "art/raw/i1/candidates/frame_26.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_26.png chorus_crystal art/edits/i1/i_chorus_crystal.png -> 12x14 -> 12x12; removed columns [] rows [3,6]; 35 rim pixels to #090a14",
+      "note": "Raw crystal: pale cyan shards with white tips on a dark blue rock base."
+    },
+    {
+      "name": "i_crystal_grit",
+      "src": "art/edits/i1/i_crystal_grit.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 28,
+      "_object": "36f8b12f-d2ee-4cd5-8ead-34efab479bf0",
+      "_raw": "art/raw/i1/candidates/frame_28.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_28.png crystal_grit art/edits/i1/i_crystal_grit.png -> 14x13 -> 12x12; removed columns [8,10] rows [11]; 31 rim pixels to #090a14",
+      "note": "Dull dark-blue chip heap with two glints (charge gone)."
+    },
+    {
+      "name": "i_charged_crystal",
+      "src": "art/edits/i1/i_charged_crystal.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 29,
+      "_object": "5beca8c3-f96f-43ec-807d-40ad19611e0a",
+      "_raw": "art/raw/i1/candidates/frame_29.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_29.png charged_crystal art/edits/i1/i_charged_crystal.png --specks 3 -> 12x14 -> 12x12; removed columns [] rows [6,7]; 3 speck pixels dropped; 29 rim pixels to #090a14",
+      "note": "Glowing cyan gem with a white core; three detached spark pixels dropped (sparks and the pulse are code effects)."
+    },
+    {
+      "name": "i_conductive_powder",
+      "src": "art/edits/i1/i_conductive_powder.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 59,
+      "_object": "0bd7a0c4-5a82-432c-9969-00c5e06e599e",
+      "_raw": "art/raw/i1/candidates/frame_59.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_59.png conductive_powder art/edits/i1/i_conductive_powder.png --map #253a5e=#3c5e8b -> 14x10 -> 12x10; removed columns [11,12] rows []; map #253a5e=#3c5e8b; 26 rim pixels to #090a14",
+      "note": "Neat bright cyan powder heap."
+    },
+    {
+      "name": "i_overcharged_crystal",
+      "src": "art/edits/i1/i_overcharged_crystal.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 31,
+      "_object": "ca0528a1-9695-49ca-bf6e-45b3d1ec47dd",
+      "_raw": "art/raw/i1/candidates/frame_31.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_31.png overcharged_crystal art/edits/i1/i_overcharged_crystal.png --specks 3 --map #253a5e=#3c5e8b -> 13x14 -> 12x12; removed columns [1] rows [1,11]; map #253a5e=#3c5e8b; 3 speck pixels dropped; 39 rim pixels to #090a14",
+      "note": "White and cyan crackling gem; spark specks dropped, #253a5e mapped to #3c5e8b (crystal ramp)."
+    },
+    {
+      "name": "i_battery",
+      "src": "art/edits/i1/i_battery.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 33,
+      "_object": "bc12e615-8075-4b10-b2ac-e18185ce9ff2",
+      "_raw": "art/raw/i1/candidates/frame_33.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_33.png battery art/edits/i1/i_battery.png -> 10x14 -> 10x12; removed columns [] rows [7,9]; 32 rim pixels to #090a14",
+      "note": "Glass cell of cyan charge with a brass cap (reads as a Leyden jar)."
+    },
+    {
+      "name": "i_circuit",
+      "src": "art/edits/i1/i_circuit.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 61,
+      "_object": "bd77a6f0-55d5-4a60-a62e-7826410ba01a",
+      "_raw": "art/raw/i1/candidates/frame_61.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_61.png circuit art/edits/i1/i_circuit.png -> 14x14 -> 12x12; removed columns [3,6] rows [2,8]; 40 rim pixels to #090a14",
+      "note": "Dark green board with copper dots and a cyan chip."
+    },
+    {
+      "name": "i_emberite",
+      "src": "art/edits/i1/i_emberite.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 35,
+      "_object": "51089384-ec4b-4c2f-895e-449316ef5409",
+      "_raw": "art/raw/i1/candidates/frame_35.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_35.png emberite art/edits/i1/i_emberite.png -> 14x14 -> 12x12; removed columns [9,12] rows [5,11]; 6 rim pixels to #090a14",
+      "note": "Black basalt lump split by glowing orange veins (the renderer adds the glow)."
+    },
+    {
+      "name": "i_aggregate",
+      "src": "art/edits/i1/i_aggregate.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 36,
+      "_object": "9b50f7b2-f7b5-4f91-919b-832663cd23fd",
+      "_raw": "art/raw/i1/candidates/frame_36.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_36.png aggregate art/edits/i1/i_aggregate.png -> 14x14 -> 12x12; removed columns [4,5] rows [6,7]; 38 rim pixels to #090a14",
+      "note": "Grey-brown cooled block with tan specks."
+    },
+    {
+      "name": "i_slag",
+      "src": "art/edits/i1/i_slag.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 37,
+      "_object": "ba96575e-3820-479f-8785-a736e2a73cdb",
+      "_raw": "art/raw/i1/candidates/frame_37.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_37.png slag art/edits/i1/i_slag.png --map #577277=#394a50,#394a50=#202e37,#341c27=#752438,#411d31=#752438,#1e1d39=#202e37,#3c5e8b=#394a50,#402751=#202e37,#253a5e=#202e37 -> 14x14 -> 12x12; removed columns [4,8] rows [1,7]; map #577277=#394a50,#394a50=#202e37,#341c27=#752438,#411d31=#752438,#1e1d39=#202e37,#3c5e8b=#394a50,#402751=#202e37,#253a5e=#202e37; 39 rim pixels to #090a14",
+      "note": "Porous clinker, recoloured one ramp step down into the coal ramp with #752438 bubbles (STYLE \"Slag\"); drawn mid-grey it read like iron ore. Keeps its #819796 glints for 3:1 on the belt."
+    },
+    {
+      "name": "i_hot_ember_ingot",
+      "src": "art/edits/i1/i_hot_ember_ingot.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 38,
+      "_object": "9cd916be-c13b-42e7-93ef-f4663d7cd8f1",
+      "_raw": "art/raw/i1/candidates/frame_38.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_38.png hot_ember_ingot art/edits/i1/i_hot_ember_ingot.png --map #d0da91=#e8c170,#a8ca58=#da863e --cols 4,9 --rows 4,9 -> 14x14 -> 12x12; removed columns [4,9] rows [4,9]; map #d0da91=#e8c170,#a8ca58=#da863e; 26 rim pixels to #090a14",
+      "note": "White-hot bar with orange edges; the lime pixels mapped into the heat ramp. Lines picked by hand."
+    },
+    {
+      "name": "i_thrumstone",
+      "src": "art/edits/i1/i_thrumstone.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 42,
+      "_object": "2f8fba58-e9d3-40f4-8770-26809f52d435",
+      "_raw": "art/raw/i1/candidates/frame_42.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_42.png thrumstone art/edits/i1/i_thrumstone.png -> 14x14 -> 12x12; removed columns [5,6] rows [1,12]; 32 rim pixels to #090a14",
+      "note": "Grey stone with pale aqua ring grooves."
+    },
+    {
+      "name": "i_engine_glass",
+      "src": "art/edits/i1/i_engine_glass.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 43,
+      "_object": "006c2585-db66-444c-8e46-b579f5d85b46",
+      "_raw": "art/raw/i1/candidates/frame_43.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_43.png engine_glass art/edits/i1/i_engine_glass.png -> 14x14 -> 12x12; removed columns [4,8] rows [6,7]; 40 rim pixels to #090a14",
+      "note": "Pale aqua glass pane in a grey frame."
+    },
+    {
+      "name": "i_heartstone",
+      "src": "art/edits/i1/i_heartstone.png",
+      "size": [
+        16,
+        16
+      ],
+      "fit": "center",
+      "trim": true,
+      "_frame": 44,
+      "_object": "c3f658db-f646-4d8a-972f-b36d466ba57f",
+      "_raw": "art/raw/i1/candidates/frame_44.png",
+      "_fix": "node scripts/art/itemfit.ts art/raw/i1/candidates/frame_44.png heartstone art/edits/i1/i_heartstone.png -> 14x14 -> 12x12; removed columns [6,7] rows [1,7]; 28 rim pixels to #090a14",
+      "note": "Pale aqua gem held in a grey stone ring."
+    }
+  ]
+}

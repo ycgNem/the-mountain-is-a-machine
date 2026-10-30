@@ -1,0 +1,32 @@
+{
+  "batch": "terrain_t_l4_floor_rock",
+  "note": "PixelLab create_topdown_tileset 29f85fc7-10f2-4e2a-adad-ceb7d8201bf6 (2026-10-30), transition_size 0.25, view high top-down. lower: black basalt cave floor, dark slate with faint hexagonal cracks | upper: wall of basalt hexagonal columns, slate grey hexagon tops, black sides | transition: basalt column face with slate grey tops. Base tiles: lower 5369416d-57b4-46c6-b098-e21764503d20, upper 7576b7e1-836b-4555-9edd-61b916ad1bc1. Imported by scripts/art/tileset.ts on 2026-10-30.",
+  "_settings": "mode standard (1 generation), tile_size 16, view high top-down (standard always draws it), shape_style round, enhance false, detail 'medium detail', shading 'basic shading'. No palette: standard refuses palette/palette_name/max_colors ('work with mode=pro only'); art:build snaps to Apollo. transition_size 0.25, transition_description 'basalt column face with slate grey tops', boundary_amplitude 0.15, boundary_seed 2. Art plan prompts: lower 'black basalt cave floor, dark slate with faint hexagonal cracks', upper 'wall of basalt hexagonal columns, slate grey hexagon tops, black sides'.",
+  "_rolls": "Only roll: 29f85fc7-10f2-4e2a-adad-ceb7d8201bf6 (art plan prompt), kept with the _fix recolour. Floor #202e37 1.42:1, slate hexagonal column tops #577277/#394a50 (lighter than the floor, as the prompt asks), dark faces. Base tiles (chain): lower 5369416d-57b4-46c6-b098-e21764503d20, upper 7576b7e1-836b-4555-9edd-61b916ad1bc1.",
+  "terrain": [
+    {
+      "name": "t_l4_floor_rock",
+      "src": "art/edits/terrain/t_l4_floor_rock.png",
+      "_fix": {"from":"art/raw/terrain/t_l4_floor_rock.png","rules":["#3c5e8b=#577277","#253a5e=#394a50","#1e1d39=#151d28","#241527=#10141f","#341c27=#151d28"],"why":"The purple-tinted raw greys snapped to blue #3c5e8b speckles on the column tops and violet/maroon cracks and faces (#1e1d39 #241527 #341c27); mapped to the neutral basalt of STYLE's L4 row (cracks #151d28, wall #10141f). Same floor-crack rule as t_l4_floor_hot, so the floors match."},
+      "tile": 16,
+      "tiles": [
+        { "rect": [0, 0], "corners": [0, 0, 0, 0] },
+        { "rect": [16, 0], "corners": [0, 0, 0, 1] },
+        { "rect": [32, 0], "corners": [0, 0, 1, 0] },
+        { "rect": [48, 0], "corners": [0, 0, 1, 1] },
+        { "rect": [0, 16], "corners": [0, 1, 0, 0] },
+        { "rect": [16, 16], "corners": [0, 1, 0, 1] },
+        { "rect": [32, 16], "corners": [0, 1, 1, 0] },
+        { "rect": [48, 16], "corners": [0, 1, 1, 1] },
+        { "rect": [0, 32], "corners": [1, 0, 0, 0] },
+        { "rect": [16, 32], "corners": [1, 0, 0, 1] },
+        { "rect": [32, 32], "corners": [1, 0, 1, 0] },
+        { "rect": [48, 32], "corners": [1, 0, 1, 1] },
+        { "rect": [0, 48], "corners": [1, 1, 0, 0] },
+        { "rect": [16, 48], "corners": [1, 1, 0, 1] },
+        { "rect": [32, 48], "corners": [1, 1, 1, 0] },
+        { "rect": [48, 48], "corners": [1, 1, 1, 1] }
+      ]
+    }
+  ]
+}

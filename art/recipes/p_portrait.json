@@ -1,0 +1,13 @@
+{
+  "batch": "p_portrait",
+  "note": "Batch P (art plan). create_image_pro, job 9363d49f-5298-4b3f-9abe-13d88af9276c, 48x48, palette = Apollo 46 (palette_name 'Apollo'), no_background true, 25 candidates, 10 generations (charged_generations 10; account at 3,771.1 used before the call). Prompt: 'pixel art portrait bust of Mags Okafor, a warm, practical site engineer in her forties, dark brown skin, short natural hair under a company-yellow hard hat, radio headset with a small mic, blue-grey work jacket, friendly half smile, three-quarter view, lit from upper left, head and shoulders filling the frame'. All 25 raw candidates are in art/raw/p_portrait/mags_00..24.png (100% Apollo). Pick: candidate 3 (direct gaze and half smile, company-yellow hat with a miner's headlamp and steel band, headset with boom mic, no wink, no toothy grin, no baked line under the bust, the fewest off-ramp hat highlights). Free touch-up in art/edits/p_mags.json (node scripts/art/touchup.ts art/edits/p_mags.json): pale-lime brim highlight -> #e8c170, a stray tan blob -> a company-yellow jacket patch. Bottom fit: the bust is cut by the frame, so it sits on the bottom edge of the radio box (src/ui/hud.ts draws it at x+4, y+4 over #10141f).",
+  "sprites": [
+    {
+      "name": "p_mags",
+      "src": "art/edits/p_mags.png",
+      "size": [48, 48],
+      "fit": "bottom",
+      "trim": true
+    }
+  ]
+}

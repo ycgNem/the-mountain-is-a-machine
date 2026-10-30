@@ -1,0 +1,7 @@
+{
+  "note": "pixelart_workbench record for b_heart, the awake Heart (free). Subject: the promoted dormant Heart object 56554d02-926e-418e-ad4e-8b7d8479f239 (https://backblaze.pixellab.ai/file/pixellab-characters/objects/859e3c7d-c1c3-4eee-9e06-c95bf333277b/56554d02-926e-418e-ad4e-8b7d8479f239/rotations/unknown.png, byte-identical to art/raw/h/b_heart_dormant.png). Result image f2db78aa-ab19-45f9-afad-c4fde8ef9659 (712 px changed); its image.png is art/edit/h/b_heart.png. Regions are inclusive [x0, y0, x1, y1]. The same operations in recolor.ts form: art/edit/h/edits.json.",
+  "changes": [
+    { "operation": "map_colors", "layer": "image", "frames": [1], "region": [50, 34, 73, 57], "colors": { "#3c5e8b": "#ebede9", "#253a5e": "#a4dddb", "#172038": "#73bed3" }, "reason": "Awake Heart: the dim blue core gem lights up, highlight facets white-hot #ebede9, body #a4dddb, dark facets #73bed3." },
+    { "operation": "map_colors", "layer": "image", "frames": [1], "region": [0, 0, 111, 111], "colors": { "#172038": "#4f8fba", "#253a5e": "#73bed3", "#3c5e8b": "#a4dddb", "#1e1d39": "#3c5e8b" }, "reason": "Awake Heart: the four dark navy glass conduits glow aqua (these colours occur only in the glass)." }
+  ]
+}
