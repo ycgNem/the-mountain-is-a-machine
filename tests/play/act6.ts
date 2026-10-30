@@ -7,24 +7,24 @@
 // The layout on the real map (seed 20261030; x, y are top-left corners; a 2x2 machine pushes out of
 // its front-right tile, a 3x3 one out of its front-centre tile):
 //   depot     (18..20, 39..41); the lower station fills its west face.
-//   M27       thrumstone Miner TM1 (24,29) W pushes straight into the Assay Lab LAB (21,29): no belts.
-//   M28       Unloaders UB (21,39) Battery and UR (21,41) Resonant Core on the depot's east face, belts
+//   M28       thrumstone Miner TM1 (24,29) W pushes straight into the Assay Lab LAB (21,29): no belts.
+//   M29       Unloaders UB (21,39) Battery and UR (21,41) Resonant Core on the depot's east face, belts
 //             (22,39) S and (22,41) N into Sequencer SW (22,40) E (left input first: the Battery), a
 //             belt into the Waking Node's west face. A tunnel (33..46, 42..46) reaches the Heart's
 //             chamber; Heartstones run from the node's port (28,42) along y=42 into the Heart.
-//   M29       the Waking Node's five rings wake the conduit on y=36: Attuners A1 (18,36), A2 (20,36),
+//   M30       the Waking Node's five rings wake the conduit on y=36: Attuners A1 (18,36), A2 (20,36),
 //             A3 (14,36) and A4 (16,36) face S; A1 and A2 push glass straight down into the depot's
 //             north face ((18,38), (20,38)), A3 and A4 east along y=38 into A1's belt. TM1's line runs
 //             down x=22 to splitters at (21,35), (19,35) and (17,35) W, each dealing left into an
 //             Attuner, the rest down (15,35) into A3. A second Miner TM2 (26,31) W side-loads TM1's
 //             line at (22,31). The lab comes up.
-//   M30       passages: x=31 (y=27..37) and (32..33, 27) into node 1's cavern; y=38 (x=32..45) east to
+//   M31       passages: x=31 (y=27..37) and (32..33, 27) into node 1's cavern; y=38 (x=32..45) east to
 //             the Heart's chamber; (55..57, 34..35) north into node 2's cavern. The east-face pair
 //             again (UG Engine Glass, UR Resonant Core, Sequencer S) feeds node 1 up x=31 until it
 //             wakes; then it is taken up and rebuilt (a fresh Sequencer, so the stream starts with
 //             glass) to feed node 2 along y=38 and up x=55. Node 2's Heartstones run down x=56..58
 //             into the Heart's east face.
-//   M31       the depot's south face: Unloaders UHE (18,42) Ember Core, UHB (19,42) Battery, UHG
+//   M32       the depot's south face: Unloaders UHE (18,42) Ember Core, UHB (19,42) Battery, UHG
 //             (20,42) Engine Glass, one lane each along y=45, 44, 43 into the Heart's west face.
 // Named buildings: TM1, TM2, LAB, UB, UR, SW, A1-A4, UG1, UR1, S1, UG2, UR2, S2, UHE, UHB, UHG (bot.get).
 
@@ -141,7 +141,7 @@ export function actSix(bot: Bot): void {
 
   // Plates for the build-out: about 200 belt tiles on top of the starter crate's 80.
   bot.phases.push({
-    name: 'plates for the build-out; a thrumstone Miner straight into an Assay Lab (M27)',
+    name: 'plates for the build-out; a thrumstone Miner straight into an Assay Lab (M28)',
     when: () => true,
     act: (b) => {
       b.request('iron_plate', 150, L);
@@ -152,13 +152,13 @@ export function actSix(bot: Bot): void {
     },
   });
 
-  // M28: the Waking Node takes Battery, Resonant Core, Battery, Resonant Core. The depot already asks
+  // M29: the Waking Node takes Battery, Resonant Core, Battery, Resonant Core. The depot already asks
   // for both (Mags: "Ask the depot to keep them in stock"); a Sequencer between two Unloaders makes
   // the stream. Its Heartstones need somewhere to go: four waiting at its front stop it (its inspector
-  // says "Output full: belt the Heartstones away"), and M28 wants five. The bot digs to the Heart.
+  // says "Output full: belt the Heartstones away"), and M29 wants five. The bot digs to the Heart.
   bot.phases.push({
-    name: 'batteries and cores into the Waking Node through a Sequencer; dig to the Heart (M28)',
-    when: has(27),
+    name: 'batteries and cores into the Waking Node through a Sequencer; dig to the Heart (M29)',
+    when: has(28),
     act: (b) => {
       b.request('resonant_core', 40, L);
       b.request('battery', 30, L);
@@ -185,11 +185,11 @@ export function actSix(bot: Bot): void {
     },
   });
 
-  // After M28 the Waking Node stops: every Heartstone costs two Resonant Cores wherever it is made,
+  // After M29 the Waking Node stops: every Heartstone costs two Resonant Cores wherever it is made,
   // but here also two Batteries, and the Attuners (2 each) and the Governor (40) need those.
   bot.phases.push({
-    name: 'stop the Waking Node; Attuners on the awake conduit, glass into the depot; dig to nodes 1 and 2 (M29)',
-    when: has(28),
+    name: 'stop the Waking Node; Attuners on the awake conduit, glass into the depot; dig to nodes 1 and 2 (M30)',
+    when: has(29),
     act: (b) => {
       // The pair, its Sequencer and the waking lane come up together; what they hold goes back.
       takeUp(b, 'waking');
@@ -226,7 +226,7 @@ export function actSix(bot: Bot): void {
     },
   });
 
-  // M30: node 1 only has to wake (one Heartstone); the east-face pair feeds it for that long.
+  // M31: node 1 only has to wake (one Heartstone); the east-face pair feeds it for that long.
   const pair = (b: Bot, k: string) => {
     b.put('unloader', dep.x + 3, dep.y, E, { filter: 'engine_glass', name: `UG${k}`, ...on });
     b.put('unloader', dep.x + 3, dep.y + 2, E, { filter: 'resonant_core', name: `UR${k}`, ...on });
@@ -235,7 +235,7 @@ export function actSix(bot: Bot): void {
     return b.put('sequencer', dep.x + 4, dep.y + 1, E, { name: `S${k}`, ...on });
   };
   bot.phases.push({
-    name: 'glass and cores to node 1 through the passage at x=31 (M30)',
+    name: 'glass and cores to node 1 through the passage at x=31 (M31)',
     when: (b) => dug(b, toNode1) && F.known(b.g, L, node1.b.x, node1.b.y),
     act: (b) => {
       lane(b, 'node1', pair(b, '1'), node1.b, on);
@@ -245,7 +245,7 @@ export function actSix(bot: Bot): void {
   // Node 1 is awake: take its feed up (its goods go back to the depot) and rebuild the pair with a
   // fresh Sequencer for node 2, the one that makes the Governor's Heartstones next to the Heart.
   bot.phases.push({
-    name: "node 1 is awake: the pair moves to node 2; node 2's Heartstones into the Heart (M30)",
+    name: "node 1 is awake: the pair moves to node 2; node 2's Heartstones into the Heart (M31)",
     when: (b) => node1.b.stockCount > 0 && dug(b, north) && dug(b, toNode2) && F.known(b.g, L, node2.b.x, node2.b.y),
     act: (b) => {
       takeUp(b, 'node1');
@@ -257,7 +257,7 @@ export function actSix(bot: Bot): void {
 
   // The Governor: glass, batteries and ember cores from the depot's south face, one lane each.
   bot.phases.push({
-    name: 'the Heart: Engine Glass, Batteries and Ember Cores from the depot (M31)',
+    name: 'the Heart: Engine Glass, Batteries and Ember Cores from the depot (M32)',
     when: (b) => b.phases.some((p) => p.done && p.name.startsWith('node 1 is awake')),
     act: (b) => {
       const sy = dep.y + 3;
@@ -369,7 +369,7 @@ export function act6Report(bot: Bot): string[] {
   const st = act6State(bot);
   const out: string[] = [];
   const end = bot.projectTimes.governor;
-  out.push(`Ending: ${g.s.ended ? `reached at ${actClock(bot, end)}` : 'NOT reached'}; M31 "The Governor" ${g.s.msDone.includes(31) ? `done at ${actClock(bot, bot.msTimes[31])}` : 'not done'}`);
+  out.push(`Ending: ${g.s.ended ? `reached at ${actClock(bot, end)}` : 'NOT reached'}; M32 "The Governor" ${g.s.msDone.includes(32) ? `done at ${actClock(bot, bot.msTimes[32])}` : 'not done'}`);
   const kinds: Record<string, number> = {};
   let machines = 0;
   let all = 0;

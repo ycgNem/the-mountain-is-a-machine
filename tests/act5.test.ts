@@ -47,7 +47,7 @@ describe('Act V pacing bot', () => {
     );
 
     expect(act, 'D5 should complete').toBeDefined();
-    for (const n of [23, 24, 25, 26]) expect(bot.msTimes[n], `milestone ${n}`).toBeGreaterThanOrEqual(bot.t0);
+    for (const n of [24, 25, 26, 27]) expect(bot.msTimes[n], `milestone ${n}`).toBeGreaterThanOrEqual(bot.t0);
     expect(act!).toBeLessThanOrEqual(CAP);
     // The bot plays with no reading or placing time, so it lands under the band's floor (the summary
     // says how far); the ceiling, with a little slack, is the bound that must hold.

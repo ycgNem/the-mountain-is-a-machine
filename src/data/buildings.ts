@@ -90,7 +90,7 @@ export const BUILDING_LIST: BuildingDef[] = [
   b({ id: 'miner', name: 'Miner', kind: 'miner', size: 2, power: 8, cost: { iron_plate: 8, gear: 4 }, category: 'production', unlock: 'start', needsDeposit: ['iron_ore', 'copper_ore', 'stone', 'coal', 'sapstone', 'chorus_crystal', 'emberite', 'thrumstone'], blurb: 'Mines the deposit under it. 30/min on a normal deposit, 60 on a rich one.' }),
   b({ id: 'smelter', name: 'Smelter', kind: 'machine', size: 2, power: 12, cost: { iron_plate: 10, gear: 2 }, category: 'production', unlock: 'start', blurb: 'Smelts ore into ingots and stone into brick.' }),
   b({ id: 'press', name: 'Press', kind: 'machine', size: 2, power: 8, cost: { iron_plate: 6, gear: 4 }, category: 'production', unlock: 'start', blurb: 'Presses ingots into plates, gears, wire and beams.' }),
-  b({ id: 'assembler', name: 'Assembler', kind: 'machine', size: 2, power: 15, cost: { iron_plate: 10, gear: 6, copper_wire: 8 }, category: 'production', unlock: 'milestone:4', blurb: 'Joins two different parts into one.' }),
+  b({ id: 'assembler', name: 'Assembler', kind: 'machine', size: 2, power: 15, cost: { iron_plate: 10, gear: 6, copper_wire: 8 }, category: 'production', unlock: 'milestone:5', blurb: 'Joins two different parts into one.' }),
   b({ id: 'foundry', name: 'Foundry', kind: 'machine', size: 2, power: 18, cost: { brick: 12, iron_plate: 6, motor: 2 }, category: 'production', unlock: 'layer:1', blurb: 'Fuses iron ingots and coal into steel.' }),
 
   // Strange: each layer's own machines, unlocked by its strange material (the fifth tab, key 5)

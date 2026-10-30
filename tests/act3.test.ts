@@ -41,7 +41,7 @@ function details(bot: Bot): string[] {
 }
 
 describe('Act III pacing bot', () => {
-  it('a competent player finishes M12-M17 and D3, opening the Crystal Depths, with no deadlock, rush or jam', () => {
+  it('a competent player finishes M13-M18 and D3, opening the Crystal Depths, with no deadlock, rush or jam', () => {
     const t0 = performance.now();
     const bot = playAct3({}, ACT3_CAP);
     const ms = performance.now() - t0;

@@ -1434,4 +1434,22 @@ third fix, in #101). The reports and the owner's calls are in `docs/reviews/revi
      clear of the HUD at 1280×720, 1600×900, 1920×1080 and 2560×1440. A new shot, `surface_jams`,
      shows the top station jammed by plates pushed into its front and a head-on belt pair with both
      badges, the mouse on one of the pair (26 shots; 27 with #103's `ending_climb`).
-
+121. **The player builds the first line (owner, session 2).** A new game opens with the HQ, the
+     Terminal and the Drill only; the old line's cost went into the HQ crate (140 plates, 41 gears).
+     Act I gains milestone 2, "Plates for the HQ" (later milestones move up one; saves migrate at
+     version 4). Each step has its own hint (currentHint) and map marker (guideMarks). The owner never
+     found the Dig tool, so a small ridge in Act I is dug through as a step, and the Shallows'
+     arrival has dig and survey steps. Scenarios and bot start states lay the old line themselves.
+122. **Right-click never removes (owner, session 2).** Right-click-to-remove cost buildings by
+     accident. A click cancels the tool, else the selection; holding the right button on a building
+     for 0.5 s removes it (a coral sweep shows the hold); Ctrl+Z puts the last removal back with its
+     facing, recipe, filter and pause, paid again or planned. The Remove tool (X) is unchanged.
+123. **Ghosts show direction (owner, session 2).** A belt ghost is the real animated tile with its
+     drag's turns and a chevron arrow, its colour on the rails, instead of a 50% dither that erased
+     the rungs. Building ghosts keep their sprite with a tinted outline and an output arrow.
+124. **Seamless belts (owner, session 2).** Rails are drawn only on sides no lane crosses, so turns,
+     side joins and splitters, crossings and sorters (no more corner blocks) read as one conveyor,
+     and lanes run into machines' intakes.
+125. **A new font and UI kit (owner, session 2).** A condensed, squared face with tabular figures
+     (same metrics), bevelled panels and buttons, and one rate style ("30/min", unit dim) for every
+     rate; the top bar shows INCOME, and machine panels show the real rate against full speed.

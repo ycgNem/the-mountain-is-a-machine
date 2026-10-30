@@ -3,11 +3,11 @@
 // it; playAct5() returns the bot at the moment D5 completes so a later run can chain acts.
 //
 // The plan (seed 20261030; coordinates are the real map's):
-// - M23: the one vent in sight (V1, 43,19) faces south straight into an Assay Lab: no belts.
+// - M24: the one vent in sight (V1, 43,19) faces south straight into an Assay Lab: no belts.
 // - At once, dig: a tunnel along row 23 from the vent's pocket into the middle cave, a neck down to
 //   the second vent (V2, 29,29), a link from the north magma pocket into the middle cave (the trunk
 //   to the drill runs that way), and room south of the steel chain for the aggregate lane.
-// - M24: V1 north into a splitter: a Cooling Bath (aggregate) and a Pressure Forge on hot ground
+// - M25: V1 north into a splitter: a Cooling Bath (aggregate) and a Pressure Forge on hot ground
 //   (F1), fed steel by a Foundry and Smelter standing port-to-port beside it (coal from the rig's
 //   field, ore from the rich iron). Aggregate rides a lane round the south of the magma into the
 //   depot; Heat Shield Assemblers at the depot (A0, A1) make the forges' shields, then the drill's.
@@ -15,7 +15,7 @@
 //   joins the lane. Foundations go under both vent miners (hot ground halves a Miner); the
 //   assemblers' aggregate unloaders stay off while the foundations still wait for aggregate (a
 //   foundation is paid on the spot, never planned, so the depot holds nothing back for it).
-// - M25: F1's molten ingots run along an insulated line to a splitter beside the Precision
+// - M26: F1's molten ingots run along an insulated line to a splitter beside the Precision
 //   Assembler on steady ground east of the depot: the PA takes what it can, the rest cools into the
 //   depot. Circuits come from an unloader.
 // - D5: a trunk from the depot round the north to the drill. The unloader at its head is switched
@@ -169,9 +169,9 @@ export function actFive(bot: Bot): void {
   const built = (name: string) => bot.named[name] !== undefined && !bot.get(name).planned;
   bot.watchItems[L4] = ['aggregate', 'heat_shield', 'circuit', 'ember_core', 'cold_ember_ingot', 'steel_beam', 'iron_plate', 'insulation', 'gear', 'battery', 'motor'];
 
-  // ---------------------------------------------------------------- M23 Hot Rock
+  // ---------------------------------------------------------------- M24 Hot Rock
   bot.phases.push({
-    name: 'down to the Magma Shelf: requests, the vent Miner straight into an Assay Lab, and the digging (M23)',
+    name: 'down to the Magma Shelf: requests, the vent Miner straight into an Assay Lab, and the digging (M24)',
     when: () => true,
     act: (b) => {
       b.focus(L4);
@@ -197,10 +197,10 @@ export function actFive(bot: Bot): void {
     },
   });
 
-  // ---------------------------------------------------------------- M24 Three Routes
+  // ---------------------------------------------------------------- M25 Three Routes
   bot.phases.push({
-    name: 'assay done: the vent split between a Cooling Bath and a Pressure Forge, the aggregate lane, the shield assembler (M24)',
-    when: has(23),
+    name: 'assay done: the vent split between a Cooling Bath and a Pressure Forge, the aggregate lane, the shield assembler (M25)',
+    when: has(24),
     act: (b) => {
       // The lab is done with: take it up (its goods go back to the depot) and turn the vent north.
       b.del(42, 21);
@@ -232,7 +232,7 @@ export function actFive(bot: Bot): void {
   });
   bot.phases.push({
     name: 'the second vent: a Thermal Extractor (slag to a Chute) and a bath whose aggregate rides back to the depot',
-    when: has(23),
+    when: has(24),
     act: (b) => {
       b.put('miner', 29, 29, E, { name: 'V2', ...L });
       b.put('splitter', 31, 30, E, { name: 'SV2', ...L });
@@ -246,7 +246,7 @@ export function actFive(bot: Bot): void {
   });
   bot.phases.push({
     name: 'steel for the forge: coal and rich iron into a Smelter and Foundry standing port to port beside it',
-    when: has(23),
+    when: has(24),
     act: (b) => {
       b.put('miner', 48, 10, S, { name: 'CM', ...L });
       lay(b, [...run(48, 12, 48, 14, S), [48, 15, S, 'crossing']]);
@@ -265,13 +265,13 @@ export function actFive(bot: Bot): void {
     },
   });
 
-  // ---------------------------------------------------------------- M25 Keep It Hot
+  // ---------------------------------------------------------------- M26 Keep It Hot
   bot.phases.push({
     name: 'the hot line: insulated belts from the forge to a splitter beside the Precision Assembler on steady ground',
-    when: has(23),
+    when: has(24),
     act: (b) => {
       lay(b, [[47, 15, E], ...run(49, 15, 58, 15, E)], 'insulated_belt');
-      // The splitter is the overflow M25's hint asks for: the forge runs twice as fast as the
+      // The splitter is the overflow M26's hint asks for: the forge runs twice as fast as the
       // assembler, and a full line holds each ingot long enough to cool for good even insulated.
       b.put('splitter', 60, 15, E, { name: 'SPP', ...L });
       lay(b, [[60, 14, N]]);
@@ -292,7 +292,7 @@ export function actFive(bot: Bot): void {
   // (and, once the trunk opens, into the trunk's head).
   bot.phases.push({
     name: 'a second heat shield assembler on the depot\'s east face',
-    when: has(23),
+    when: has(24),
     act: (b) => {
       b.put('assembler', 62, 11, N, { recipe: 'heat_shield', name: 'A1', ...L });
       b.put('unloader', 61, 11, E, { name: 'UA1', ...L });
@@ -305,7 +305,7 @@ export function actFive(bot: Bot): void {
   const trunk: { x: number; y: number }[] = [];
   bot.phases.push({
     name: 'D5: the drill end (a sorter into a reheating forge) and the trunk round the north',
-    when: has(23),
+    when: has(24),
     act: (b) => {
       b.put('sorter', 18, 35, S, { filter: 'cold_ember_ingot', name: 'SD', ...L });
       b.put('pressure_forge', 19, 35, S, { recipe: 'reheat_ember', name: 'FDR', ...L });

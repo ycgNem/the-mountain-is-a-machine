@@ -340,14 +340,14 @@ describe('Alien Strata: engine nodes', () => {
     expect(L.conduitLive.reduce((n, v) => n + v, 0)).toBeGreaterThan(0);
   });
 
-  it('milestone 28 asks for five Heartstones, one per ring, and completes on the fifth', () => {
+  it('milestone 29 (Wake the Engine) asks for five Heartstones, one per ring, and completes on the fifth', () => {
     const g = Game.create(20261030);
     while (g.s.project && PROJECTS[g.s.project.id].opens > 0) {
       const p = g.s.project;
       for (const [k, v] of Object.entries(PROJECTS[p.id].needs)) p.delivered[k] = v;
       completeProject(g);
     }
-    const idx = MILESTONES.findIndex((m) => m.n === 28);
+    const idx = MILESTONES.findIndex((m) => m.n === 29);
     startMilestone(g, idx);
     const st = MILESTONES[idx].steps[0];
     expect(st).toMatchObject({ kind: 'produce', item: 'heartstone', count: WAKE_RINGS });
@@ -363,11 +363,11 @@ describe('Alien Strata: engine nodes', () => {
     for (let k = 0; k < 4; k++) heartstone();
     checkMilestones(g);
     expect(stepProgress(g, st)).toMatchObject({ cur: 4, max: 5, done: false, label: 'Wake the Waking Node' });
-    expect(g.s.msDone).not.toContain(28);
+    expect(g.s.msDone).not.toContain(29);
     heartstone();
     expect(node.stockCount).toBe(5);
     checkMilestones(g);
-    expect(g.s.msDone).toContain(28);
+    expect(g.s.msDone).toContain(29);
     expect(g.s.milestone).toBe(idx + 1);
   });
 

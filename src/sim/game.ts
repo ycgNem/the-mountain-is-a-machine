@@ -34,8 +34,10 @@ import {
  * 2: decor values index LAYERS[].decor and the amber rock is AMBER_DECOR (save.ts migrates 1).
  * 3: contracts count Chute deliveries (`chute`), shafts remember the last request served (`reqLast`);
  * on load lower stations face their depot again and stray pause flags are cleared.
+ * 4: Act I's tutorial has a second milestone (Plates for the HQ), so every milestone from the Copper
+ * Line on is numbered one higher (save.ts moves an older save's milestone and msDone up).
  */
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 export const STOCK_CAP = 999;
 
 export interface PlaceCheck {
@@ -189,6 +191,11 @@ export class Game {
 
   // ---------------------------------------------------------------- setup
 
+  /**
+   * The Surface as a new game opens: the HQ with its crate, the Shipping Terminal and the broken Drill,
+   * and nothing else. The player builds the first line (Act I's first milestones walk them through it);
+   * the crate holds what the line that used to come ready-made cost (data/layers.ts).
+   */
   private setupSurface(): void {
     const L = this.layer(0);
     L.stock = { ...LAYERS[0].starterCrate };
@@ -197,39 +204,6 @@ export class Game {
     this.spawnFixed('hq', 0, SURFACE.hq.x, SURFACE.hq.y, 2);
     this.spawnFixed('terminal', 0, SURFACE.terminal.x, SURFACE.terminal.y, 2);
     this.spawnFixed('drill', 0, SURFACE.drill.x, SURFACE.drill.y, 2);
-    // The starter line: iron miner -> smelter -> splitter. Straight on to the terminal for money;
-    // the splitter's left exit runs up into a press that stocks the HQ with plates.
-    const miner = this.forcePlace('miner', 0, 16, 24, 1);
-    const info = this.minerInfo(0, 16, 24, BUILDINGS.miner);
-    miner.ore = info.ore;
-    miner.rate = info.rate;
-    const smelter = this.forcePlace('smelter', 0, 22, 24, 1);
-    smelter.recipe = 'iron_ingot';
-    for (let x = 18; x <= 21; x++) this.forcePlace('belt', 0, x, 25, 1);
-    this.forcePlace('belt', 0, 24, 25, 1);
-    this.forcePlace('splitter', 0, 25, 25, 1);
-    for (let x = 26; x <= 31; x++) this.forcePlace('belt', 0, x, 25, 1);
-    this.forcePlace('belt', 0, 25, 24, 0);
-    const press = this.forcePlace('press', 0, 25, 22, 0);
-    press.recipe = 'iron_plate';
-    this.forcePlace('belt', 0, 26, 21, 0);
-    this.forcePlace('belt', 0, 26, 20, 0);
-    // The line is already running when the game opens: ore on the belts into the smelter, ingots in its
-    // buffer and on every other belt after it, so the first sale lands within a couple of seconds.
-    const fill = (x: number, y: number, id: string) => {
-      const b = this.at(0, x, y)!;
-      b.item = { id, heat: 0 };
-      b.prog = 0.5;
-      b.inDir = b.dir;
-      b.outDir = b.dir;
-    };
-    for (let x = 18; x <= 21; x++) fill(x, 25, 'iron_ore');
-    for (const x of [24, 26, 28, 30]) fill(x, 25, 'iron_ingot');
-    fill(25, 24, 'iron_ingot');
-    smelter.outBuf = [
-      { id: 'iron_ingot', heat: 0 },
-      { id: 'iron_ingot', heat: 0 },
-    ];
   }
 
   /** Fixed buildings (HQ, depot, terminal, drill, elevator, nodes, heart). */
@@ -682,6 +656,9 @@ export class Game {
    * re-lays it (end to end, that reverses it). A drag that starts on a straight run of a line across
    * its path (the cell behind that belt pushes into it) and goes on past it crosses it with a Crossing,
    * so the new line doesn't merge into the old one; a line turning there keeps its belt (review-3 K7).
+   * A drag that starts on a line's last belt, one that hands on to nothing, and goes off across it
+   * turns that belt into the drag, so the line carries on: that is how a player extends a line, and
+   * there is nothing past it to cross or to cut off.
    * It never replaces a splitter, sorter, crossing or other logistics piece. A single placement still
    * replaces whatever it is placed on.
    */
@@ -696,7 +673,10 @@ export class Game {
       const corner = i > 0 && pieces[i - 1].dir !== p.dir;
       if (i === 0 || i === last || corner) {
         if (o.dir === p.dir) return { type, ...p, skip: false };
-        if (i === 0 && i < last && o.dir % 2 !== p.dir % 2 && this.fedFromBehind(layer, o)) return { type: 'crossing', ...p, skip: false };
+        if (i === 0 && i < last && o.dir % 2 !== p.dir % 2) {
+          if (!this.at(layer, o.x + DX[o.dir], o.y + DY[o.dir])) return { type, ...p, skip: false };
+          if (this.fedFromBehind(layer, o)) return { type: 'crossing', ...p, skip: false };
+        }
         // The next drag tile at the start or a corner (the corner is the second leg's first tile), the
         // one before at the end: the drag runs along this line if a belt there is on the same axis.
         const j = i === 0 || corner ? (i < last ? i + 1 : -1) : i - 1;

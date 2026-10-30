@@ -11,10 +11,11 @@ import { Particles } from '../render/particles';
 import { TILE } from '../render/terrain';
 import { WorldRenderer, type GhostPiece } from '../render/world';
 import { refreshEnv } from '../sim/env';
+import { guideMarks } from '../sim/progress';
 import { Game, type DragPiece } from '../sim/game';
 import { revealComponent } from '../sim/mapgen';
 import { loadSlot, saveMeta, saveToStorage, SLOTS } from '../sim/save';
-import { TICK, type Dir, type GameEvent } from '../sim/types';
+import { TICK, type Building, type Dir, type GameEvent } from '../sim/types';
 import { drawHud } from '../ui/hud';
 import { drawInspector } from '../ui/inspector';
 import { UI, type Rect } from '../ui/ui';
@@ -59,12 +60,34 @@ export interface FloatText {
   t: number;
 }
 
+/** What a removal took, so Ctrl+Z can put it back where it stood (a bare foundation tile is type 'foundation'). */
+interface Removed {
+  type: string;
+  layer: number;
+  x: number;
+  y: number;
+  dir: Dir;
+  recipe: string | null;
+  filter: string | null;
+  paused: boolean;
+}
+
+/**
+ * How long the right button must be held on a building to remove it (real seconds): long enough that
+ * a right-click meant to cancel never removes anything.
+ */
+const REMOVE_HOLD_S = 0.5;
+/** A hold this short is still a click: the removal sweep only shows after it. */
+const REMOVE_HOLD_SHOW_S = 0.1;
+/** How many removals Ctrl+Z remembers. */
+const UNDO_DEPTH = 20;
+
 const BELT_TYPES = new Set(['belt', 'express_belt', 'insulated_belt']);
 const LINE_TYPES = new Set(['belt', 'express_belt', 'insulated_belt', 'shield_wall', 'lamp', 'foundation']);
 /** Drag refusals that only mean "already there": not worth a toast on a multi-piece drag. */
 const NO_OP_REFUSALS = new Set(['Same building already here', 'Already a foundation']);
-/** Where the camera starts on the Surface (tiles): the whole Drill and the Shipping Terminal show at 1280x720. */
-const START_CAM = { x: 22, y: 19.25 };
+/** Where the camera starts on the Surface (tiles): the first line's ground (the iron deposit, the HQ and the Shipping Terminal) shows above the build bar at 1280x720. */
+const START_CAM = { x: 24, y: 20.25 };
 /** Windows that stop the simulation and the world's input while open. */
 const BLOCKING: WindowId[] = ['menu', 'settings', 'savefail'];
 const SETTINGS_KEY = 'mountain-settings';
@@ -89,6 +112,12 @@ export class App {
   hovered: number | null = null;
   hoverCell: { x: number; y: number } | null = null;
   dragStart: { x: number; y: number; button: number } | null = null;
+  /** The right button went down on the world; `used` once it removed something or cancelled digging. */
+  rightPress: { used: boolean } | null = null;
+  /** The building the right button is held on, and for how long (real seconds). */
+  rightHold: { id: number; t: number } | null = null;
+  /** Removals Ctrl+Z can put back, oldest first: each is one click, drag or hold. */
+  undoStack: Removed[][] = [];
   speed = 1;
   /** The save slot this operation saves into (0..SLOTS-1). */
   slot = readSlot();
@@ -467,6 +496,8 @@ export class App {
           },
           particles: this.particles,
           reveal: 0,
+          removeHold: this.removeHoldRect(),
+          guides: guideMarks(g, this.layer),
           // The dawn stays on the Surface under the thank-you card.
           ending: this.cine?.look(this.layer),
         },
@@ -840,7 +871,7 @@ export class App {
     if ((this.ui.overPrev || this.input.uiCapture) && !this.dragStart) return [];
     const type = this.tool.type;
     const plan = this.dragPlan(type, this.toolPieces(type, this.dragStart, this.hoverCell).slice(0, 400));
-    const out: GhostPiece[] = plan.map((p) => ({ type: p.type, x: p.x, y: p.y, dir: p.dir, ok: false, planned: false }));
+    const out: GhostPiece[] = plan.map((p) => ({ type: p.type, x: p.x, y: p.y, dir: p.dir, ok: false, planned: false, skip: p.skip }));
     const order = plan.map((_, i) => i).filter((i) => !plan[i].skip);
     order.sort((a, b) => (plan[a].type === 'crossing' ? 0 : 1) - (plan[b].type === 'crossing' ? 0 : 1) || a - b);
     const stock: Record<string, number> = { ...g.layer(this.layer).stock };
@@ -849,6 +880,8 @@ export class App {
       const chk = g.canPlace(p.type, this.layer, p.x, p.y, p.dir, stock);
       out[i].ok = chk.ok;
       out[i].planned = !!chk.planned;
+      // A drag along a line that is already there changes nothing on those tiles: show what stands.
+      if (!chk.ok && plan.length > 1 && NO_OP_REFUSALS.has(chk.reason ?? '')) out[i].skip = true;
       if (!chk.ok || chk.planned) continue;
       for (const id of chk.replace ?? []) {
         const o = g.b(id);
@@ -898,39 +931,48 @@ export class App {
         this.dragStart = { x: c.x, y: c.y, button: 0 };
       }
     }
+    // The right button never removes on a click: right-click-to-remove cost players buildings by
+    // accident. A click cancels (the tool, else the selection). Held on a building for REMOVE_HOLD_S it
+    // removes that one, as an undoable removal; moving on to another while still holding starts that
+    // one's own hold. In the Dig tool a right-drag cancels the queued digging under it instead.
     if (!overUi && k.pressed[2]) {
-      if (this.tool.kind === 'build' && !g.at(this.layer, c.x, c.y)) {
-        this.tool = { kind: 'select' };
-      } else {
-        this.dragStart = { x: c.x, y: c.y, button: 2 };
-      }
+      this.rightPress = { used: false };
+      this.rightHold = null;
+      if (this.tool.kind === 'dig') this.dragStart = { x: c.x, y: c.y, button: 2 };
     }
+    if (this.rightPress && k.down[2] && this.tool.kind !== 'dig') this.holdToRemove();
     // Release: apply.
     if (this.dragStart && ((this.dragStart.button === 0 && k.released[0]) || (this.dragStart.button === 2 && k.released[2]))) {
       const ds = this.dragStart;
       this.dragStart = null;
-      if (ds.button === 2 || this.tool.kind === 'remove') {
+      if (ds.button === 2) {
         const r = this.rectOf(ds, c);
-        let n = 0;
+        const cells = [];
+        for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) cells.push({ x, y });
+        const L = g.layer(this.layer);
+        const queued = L.digQueue.length;
+        g.cancelDig(this.layer, cells);
+        if (L.digQueue.length < queued && this.rightPress) this.rightPress.used = true;
+      } else if (this.tool.kind === 'remove') {
+        const r = this.rectOf(ds, c);
+        const L = g.layer(this.layer);
+        const batch: Removed[] = [];
         const seen = new Set<number>();
         for (let y = r.y0; y <= r.y1; y++) {
           for (let x = r.x0; x <= r.x1; x++) {
             const b = g.at(this.layer, x, y);
-            if (b && !seen.has(b.id)) {
+            if (b) {
+              if (seen.has(b.id)) continue;
               seen.add(b.id);
-              if (g.remove(this.layer, x, y)) n++;
-            } else if (!b && g.layer(this.layer).foundation[y * g.layer(this.layer).w + x] && (ds.button === 0 || this.tool.kind === 'remove')) {
-              if (g.remove(this.layer, x, y)) n++;
+              const was = removedOf(b);
+              if (g.remove(this.layer, x, y)) batch.push(was);
+            } else if (L.foundation[y * L.w + x] && g.remove(this.layer, x, y)) {
+              batch.push({ type: 'foundation', layer: this.layer, x, y, dir: 0, recipe: null, filter: null, paused: false });
             }
           }
         }
-        if (n && this.selected != null && !g.b(this.selected)) this.selected = null;
-        if (ds.button === 2) {
-          // Also cancel queued digging under a right-drag.
-          const cells = [];
-          for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) cells.push({ x, y });
-          g.cancelDig(this.layer, cells);
-        }
+        this.pushUndo(batch);
+        if (batch.length && this.selected != null && !g.b(this.selected)) this.selected = null;
       } else if (this.tool.kind === 'dig') {
         const r = this.rectOf(ds, c);
         const cells = [];
@@ -954,8 +996,105 @@ export class App {
         if (r.planned) this.toast(`${r.planned} planned: built when the depot has the goods`, 'info');
       }
     }
+    if (k.released[2] && this.rightPress) {
+      // A right-click that removed nothing and cancelled no digging cancels: the tool, else the selection.
+      if (!this.rightPress.used) {
+        if (this.tool.kind !== 'select') this.tool = { kind: 'select' };
+        else this.selected = null;
+      }
+      this.rightPress = null;
+      this.rightHold = null;
+    }
     if (k.released[0] && this.dragStart?.button === 0) this.dragStart = null;
     if (k.released[2] && this.dragStart?.button === 2) this.dragStart = null;
+  }
+
+  /**
+   * One frame of the right button held on the world: the building under it goes once it has been held
+   * for REMOVE_HOLD_S. Over a panel, over nothing or over a fixed building the hold starts again.
+   */
+  private holdToRemove(): void {
+    const g = this.game!;
+    const c = this.hoverCell;
+    const b = c ? g.at(this.layer, c.x, c.y) : null;
+    if (!b || BUILDINGS[b.type].fixed) {
+      this.rightHold = null;
+      return;
+    }
+    if (this.rightHold?.id !== b.id) this.rightHold = { id: b.id, t: 0 };
+    this.rightHold.t += this.dt;
+    if (this.rightHold.t < REMOVE_HOLD_S) return;
+    this.rightHold = null;
+    if (this.removeBuilding(b.id) && this.rightPress) this.rightPress.used = true;
+  }
+
+  /** The building a held right button is removing, for the renderer's sweep (tiles; frac 0..1), once the hold is no longer a click. */
+  removeHoldRect(): { x: number; y: number; w: number; h: number; frac: number } | null {
+    const h = this.rightHold;
+    const b = h ? this.game?.b(h.id) : undefined;
+    if (!h || !b || h.t < REMOVE_HOLD_SHOW_S) return null;
+    const s = BUILDINGS[b.type].size;
+    return { x: b.x, y: b.y, w: s, h: s, frac: Math.min(1, h.t / REMOVE_HOLD_S) };
+  }
+
+  /** Remove one building as an undoable removal (a held right button, the inspector's Remove button). */
+  removeBuilding(id: number): boolean {
+    const g = this.game!;
+    const b = g.b(id);
+    if (!b) return false;
+    const was = removedOf(b);
+    if (!g.remove(b.layer, b.x, b.y)) return false;
+    this.pushUndo([was]);
+    if (this.selected === id) this.selected = null;
+    return true;
+  }
+
+  /** Remember a removal for Ctrl+Z, and say that it can be undone. */
+  private pushUndo(batch: Removed[]): void {
+    if (!batch.length) return;
+    this.undoStack.push(batch);
+    if (this.undoStack.length > UNDO_DEPTH) this.undoStack.shift();
+    const one = batch.length === 1;
+    const what = one ? BUILDINGS[batch[0].type].name : `${batch.length} pieces`;
+    this.toast(`${what} removed. Ctrl+Z puts ${one ? 'it' : 'them'} back`, 'info');
+  }
+
+  /**
+   * Ctrl+Z: the last removal goes back where it stood, with its facing, recipe, filter and pause. Each
+   * piece is paid for again (removing refunded it); one the depot can't pay for yet goes down as a
+   * planned ghost, as any placement would. Something built there since stays and that piece is skipped.
+   */
+  undoRemove(): void {
+    const g = this.game!;
+    const batch = this.undoStack.pop();
+    if (!batch) {
+      this.toast('Nothing to undo', 'info');
+      return;
+    }
+    let back = 0;
+    let planned = 0;
+    for (const r of batch) {
+      if (r.type === 'foundation') {
+        const L = g.layer(r.layer);
+        g.place('foundation', r.layer, r.x, r.y, r.dir);
+        if (L.foundation[r.y * L.w + r.x]) back++;
+        continue;
+      }
+      const b = g.place(r.type, r.layer, r.x, r.y, r.dir, { recipe: r.recipe, filter: r.filter });
+      if (!b) continue;
+      if (r.paused) g.setPaused(b.id, true);
+      back++;
+      if (b.planned) planned++;
+    }
+    const skipped = batch.length - back;
+    if (!back) {
+      this.toast(batch.length === 1 ? "Can't put it back: something else is there now" : "Can't put them back: something else is there now", 'bad');
+      return;
+    }
+    const parts = [`Put back ${back === 1 && batch.length === 1 ? BUILDINGS[batch[0].type].name : back}`];
+    if (planned) parts.push(`${planned} planned until the depot has the goods`);
+    if (skipped) parts.push(`${skipped} blocked by what stands there now`);
+    this.toast(parts.join('; '), skipped ? 'bad' : 'good');
   }
 
   /**
@@ -1023,7 +1162,8 @@ export class App {
     if (k.hit('`')) this.win = this.win === 'debug' ? null : 'debug';
     // Build-bar tabs: 1 Logistics to 5 Strange.
     for (const t of CATEGORIES) if (k.hit(t.key)) this.category = t.id;
-    if (k.key('Control') && k.hit('s')) {
+    if (k.hit('Mod+z')) this.undoRemove();
+    if (k.hit('Mod+s')) {
       if (!this.canSave()) this.toast('Scenarios are not saved', 'info');
       else if (saveToStorage(g, this.slot)) this.toast('Saved', 'good');
       else this.toast('Could not save (storage full or blocked): export a save file', 'bad');
@@ -1046,6 +1186,10 @@ export class App {
   itemName(id: string): string {
     return ITEMS[id]?.name ?? id;
   }
+}
+
+function removedOf(b: Building): Removed {
+  return { type: b.type, layer: b.layer, x: b.x, y: b.y, dir: b.dir, recipe: b.recipe, filter: b.filter, paused: !!b.paused };
 }
 
 function readSlot(): number {

@@ -7,8 +7,13 @@
 // darkness -> emissive (awake conduit glass, its veins through the rock, working machines' light
 // spots) -> overlays (spores, heat, interference: above the darkness so they read in unlit ground)
 // -> survey markers, beacons (bore site; the Heart and sleeping Engine Nodes while the Governor is
-// open), status icons (jammed stations and belts too), selection and port brackets -> placement
-// ghosts.
+// open), status icons (jammed stations and belts too), selection and port brackets -> the
+// tutorial's guide frames and a hold-to-remove sweep -> placement ghosts.
+//
+// Belts join seamlessly (belts.ts): each belt and piece looks at its neighbours, with the sim's own
+// rules for what feeds what (pushes, takes), to choose its curve and which sides a lane crosses, and
+// a lane that runs into a building, or out of its chute, is carried on to the building's art.
+// Planned buildings and placement ghosts take part, so a line shows its joins before it is built.
 //
 // The ending sequence (src/app/ending.ts) dresses a layer through RenderOpts.ending: the dawn sky over
 // the Surface's north edge (before the terrain) and its warm dither on the ground (after the ground
@@ -29,9 +34,9 @@ import { AMBER_DECOR, ORE_LIST } from '../sim/mapgen';
 import { jamFresh } from '../sim/production';
 import { nodeAwake } from '../sim/progress';
 import { hash2 } from '../sim/rng';
-import { DX, DY, leftOf, newBuilding, rightOf, T_FLOOR, T_HARD, T_MAGMA, T_WATER, type Building, type Dir, type LayerState } from '../sim/types';
+import { DX, DY, leftOf, newBuilding, opp, rightOf, T_FLOOR, T_HARD, T_MAGMA, T_WATER, type Building, type Dir, type LayerState } from '../sim/types';
 import { sprite, spriteAnchor, spriteBox, spriteChuteEdges, spriteLights, type Sprite } from './atlas';
-import { beltFrame, beltTile, isPieceKind, lockstepPx, pieceTile, type BeltShape } from './belts';
+import { arrowTile, beltFrame, beltTile, isPieceKind, laneStrip, lockstepPx, pieceSides, pieceTile, sideBit, SIDE_B, SIDE_F, SIDE_L, SIDE_R, TINT_COL, type BeltShape, type Tint } from './belts';
 import { statusIcon } from './icons';
 import { Particles } from './particles';
 import { conduitArt, conduitGlass, dormantCopy, terrainCanvas, TERRAIN_PAL, TILE } from './terrain';
@@ -53,6 +58,16 @@ export interface GhostPiece {
   dir: Dir;
   ok: boolean;
   planned: boolean;
+  /** A drag leaves what stands here (Game.planDrag's skip): nothing is drawn, and the joins see what stands. */
+  skip?: boolean;
+}
+
+/** A tile rect on the shown layer, in tiles. */
+export interface TileRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 
 /**
@@ -89,12 +104,45 @@ export interface RenderOpts {
   reveal: number;
   /** The ending sequence's dressing for this layer, while it plays (and the dawn until the card goes). */
   ending?: EndingLook;
+  /**
+   * Tile rects on the shown layer the tutorial points at (put a Miner here, belt into the Terminal):
+   * each gets a pulsing bracket frame and a bobbing arrow, above the darkness and everything built.
+   */
+  guides?: TileRect[];
+  /**
+   * The building the player is holding the right button on to remove it (its footprint in tiles) and
+   * how far the hold has come (0..1): a coral sweep over the footprint.
+   */
+  removeHold?: (TileRect & { frac: number }) | null;
 }
 
-/** Ghost colours (STYLE code-drawn table): valid, invalid, planned. Laid over the sprite at 50% dither. */
-const GHOST_OK = C.lime;
-const GHOST_BAD = C.coral;
-const GHOST_PLANNED = C.blue3;
+/**
+ * Ghost colours (STYLE code-drawn table, belts.ts TINT_COL): valid, blocked, planned. A ghost keeps
+ * its sprite or belt tile readable: the colour is in the sprite's dark line work and a 1 px outline
+ * round it (a blocked one also gets a dither of it), or in a belt's rails and a piece's housing, with
+ * a bold chevron for the way the belt runs or the output leaves.
+ */
+const GHOST_PLANNED = TINT_COL.planned;
+/** How fast a ghost belt's rungs run, in px per real second: a conveyor's 24 px/s. */
+const GHOST_PX_PER_S = 24;
+/**
+ * How far a lane is carried past a tile edge into a building to meet its art (px). Art that stands
+ * further in than this leaves the lane at the footprint's edge.
+ */
+const STRIP_MAX = 12;
+/** The longest run of crossings in a row the joins follow back to what feeds it (wider than any layer). */
+const CROSSING_RUN = 128;
+
+/** What a cell holds as the joins see it: a building (built or planned) or a placement ghost. */
+type Stand = Building | GhostPiece;
+
+/** A sprite's opaque pixels (alpha 128 or more), read back once per sprite. */
+interface Mask {
+  s: Sprite;
+  w: number;
+  h: number;
+  a: Uint8Array;
+}
 
 /**
  * The interference overlay (PLAN §5.10, STYLE Effects), all 1 px lines:
@@ -299,7 +347,16 @@ export class WorldRenderer {
   buf: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   private shadowCache = new Map<string, HTMLCanvasElement>();
-  private ditherCache = new Map<string, HTMLCanvasElement>();
+  /** Ghost looks of sprites (ghostSprite), per sprite name and tint; rebuilt if the sprite changes (the atlas loading). */
+  private ghostCache = new Map<string, { s: Sprite; c: HTMLCanvasElement }>();
+  /** Opaque pixels per sprite name (mask), and the art's depth behind a footprint edge (artDepth). */
+  private masks = new Map<string, { s: Sprite; m: Mask | null }>();
+  private depths = new Map<string, { s: Sprite; d: number[] | null }>();
+  /** This frame's placement ghosts by cell (every cell of a footprint) on `ghostLayer`, for the joins. */
+  private ghostAt = new Map<number, GhostPiece>();
+  private ghostLayer = -1;
+  /** A world-anchored 50% #cf573c checker for the hold-to-remove sweep. */
+  private removeFill: CanvasPattern | null = null;
   private chuteCache = new Map<string, HTMLCanvasElement>();
   private patternCache = new Map<string, HTMLCanvasElement>();
   private lastEmit = 0;
@@ -372,6 +429,21 @@ export class WorldRenderer {
     // Terrain (cached).
     this.blitWorld(terrainCanvas(L), v);
 
+    // The placement ghosts by cell, so belts beside them show the joins they would make.
+    this.ghostAt.clear();
+    this.ghostLayer = v.layer;
+    for (const gh of o.ghosts) {
+      const size = BUILDINGS[gh.type]?.size ?? 0;
+      if (gh.skip) continue;
+      for (let dy = 0; dy < size; dy++) {
+        for (let dx = 0; dx < size; dx++) {
+          const x = gh.x + dx;
+          const y = gh.y + dy;
+          if (x >= 0 && y >= 0 && x < L.w && y < L.h) this.ghostAt.set(y * L.w + x, gh);
+        }
+      }
+    }
+
     this.drawGround(g, v, o, x0, y0, x1, y1);
     if (dawn > 0) this.drawDawnGround(L, v, dawn);
     const blds = this.visibleBuildings(g, v, x0, y0, x1, y1);
@@ -384,7 +456,10 @@ export class WorldRenderer {
     this.drawOverlays(g, v, o, x0, y0, x1, y1, blds);
     if (look?.heart) this.drawHeartWake(g, v, o.time, look.heart);
     this.drawAboveDark(g, v, o, x0, y0, x1, y1, blds);
+    if (o.guides?.length) this.drawGuides(o.guides, o.time);
+    if (o.removeHold) this.drawRemoveHold(o.removeHold, o.time);
     this.drawGhosts(g, v, o);
+    this.ghostAt.clear();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     return this.buf;
   }
@@ -794,39 +869,86 @@ export class WorldRenderer {
     return c;
   }
 
+  /** A sprite's opaque pixels, read back once (again if the sprite changes when the atlas loads); null if unreadable. */
+  private mask(name: string): Mask | null {
+    const s = sprite(name);
+    if (!s) return null;
+    const had = this.masks.get(name);
+    if (had && had.s === s) return had.m;
+    let m: Mask | null = null;
+    const c = document.createElement('canvas');
+    c.width = s.w;
+    c.height = s.h;
+    const x = c.getContext('2d', { willReadFrequently: true });
+    if (x) {
+      try {
+        x.drawImage(s.img, s.x, s.y, s.w, s.h, 0, 0, s.w, s.h);
+        const d = x.getImageData(0, 0, s.w, s.h).data;
+        const a = new Uint8Array(s.w * s.h);
+        for (let i = 0; i < a.length; i++) a[i] = d[i * 4 + 3] >= 128 ? 1 : 0;
+        m = { s, w: s.w, h: s.h, a };
+      } catch {
+        // unreadable pixels: no outline, no lanes carried to the art
+      }
+    }
+    this.masks.set(name, { s, m });
+    return m;
+  }
+
   /**
-   * A copy of an image with every other opaque pixel (world-anchored checkerboard) replaced by
-   * `col`: the palette-only way to tint a ghost at 50%.
+   * A sprite as a ghost (STYLE code-drawn table): the art kept whole with its own dark outline and
+   * line work (the near-black pixels) turned the ghost's colour, inside a 1 px outline of that colour
+   * round its silhouette; a blocked ghost also gets a dither of it over one pixel in four, so it
+   * reads as blocked at a glance. A wide dark area (a Miner's pit, a tank's opening) keeps its dark
+   * inside and only its rim turns, so it stays a hole rather than a blot of colour. 2 px wider and
+   * taller than the sprite: draw it 1 px up and left. Cached per sprite and tint.
    */
-  private dithered(key: string, src: CanvasImageSource, sx: number, sy: number, w: number, h: number, col: string): HTMLCanvasElement {
-    const k = `${key}|${col}`;
-    let c = this.ditherCache.get(k);
-    if (c) return c;
-    c = document.createElement('canvas');
+  private ghostSprite(name: string, tint: Exclude<Tint, 'steel'>): HTMLCanvasElement | null {
+    const s = sprite(name);
+    if (!s) return null;
+    const key = `${name}|${tint}`;
+    const had = this.ghostCache.get(key);
+    if (had && had.s === s) return had.c;
+    const w = s.w + 2;
+    const h = s.h + 2;
+    const c = document.createElement('canvas');
     c.width = w;
     c.height = h;
-    const x = c.getContext('2d')!;
-    x.drawImage(src, sx, sy, w, h, 0, 0, w, h);
-    const img = x.getImageData(0, 0, w, h);
-    const d = img.data;
-    const [r, gg, bb] = hexToRgb(col);
-    for (let j = 0; j < h; j++) {
-      for (let i = 0; i < w; i++) {
-        const p = (j * w + i) * 4;
-        if (d[p + 3] < 128) {
-          d[p + 3] = 0;
-          continue;
-        }
-        d[p + 3] = 255;
-        if ((i + j) & 1) {
-          d[p] = r;
-          d[p + 1] = gg;
-          d[p + 2] = bb;
+    const x = c.getContext('2d', { willReadFrequently: true })!;
+    x.drawImage(s.img, s.x, s.y, s.w, s.h, 1, 1, s.w, s.h);
+    const m = this.mask(name);
+    if (m) {
+      let px: Uint8ClampedArray | null = null;
+      try {
+        px = x.getImageData(0, 0, w, h).data;
+      } catch {
+        // unreadable: the outline alone
+      }
+      x.fillStyle = TINT_COL[tint];
+      const solid = (i: number, j: number) => i >= 0 && j >= 0 && i < m.w && j < m.h && m.a[j * m.w + i] === 1;
+      // The art's darkest colours (#090a14, #10141f, #151d28 and the like) carry its outline.
+      const dark = (i: number, j: number): boolean => {
+        if (!px || !solid(i, j)) return false;
+        const p = ((j + 1) * w + i + 1) * 4;
+        return Math.max(px[p], px[p + 1], px[p + 2]) <= 40;
+      };
+      for (let j = -1; j <= m.h; j++) {
+        for (let i = -1; i <= m.w; i++) {
+          if (solid(i, j)) {
+            // Line work and the rim of a dark area: a dark pixel with something other than dark art
+            // beside it.
+            const line = dark(i, j) && !(dark(i - 1, j) && dark(i + 1, j) && dark(i, j - 1) && dark(i, j + 1));
+            // The dither keeps to the world's grid (sprites sit on whole tiles).
+            if (line || (tint === 'bad' && (i & 1) === 0 && (j & 1) === 0)) x.fillRect(i + 1, j + 1, 1, 1);
+            continue;
+          }
+          let edge = false;
+          for (let dj = -1; dj <= 1 && !edge; dj++) for (let di = -1; di <= 1; di++) if (solid(i + di, j + dj)) edge = true;
+          if (edge) x.fillRect(i + 1, j + 1, 1, 1);
         }
       }
     }
-    x.putImageData(img, 0, 0);
-    this.ditherCache.set(k, c);
+    this.ghostCache.set(key, { s, c });
     return c;
   }
 
@@ -836,37 +958,281 @@ export class WorldRenderer {
     return `b_${b.type}`;
   }
 
+  /** The sprite a building or a placement ghost is drawn with. */
+  private standName(g: Game, n: Stand): string {
+    return 'id' in n ? this.spriteName(g, n) : n.type === 'drill' ? 'b_drill' : `b_${n.type}`;
+  }
+
   /** Belts and logistics pieces lie flat on the ground and are drawn from code. */
   private isFlat(type: string): boolean {
     const k: string = BUILDINGS[type]?.kind ?? '';
     return k === 'belt' || isPieceKind(k);
   }
 
-  private flatTile(g: Game | null, b: { type: string; dir: Dir; x: number; y: number; layer: number }, frame: number): { tile: HTMLCanvasElement; key: string } {
-    const k: string = BUILDINGS[b.type].kind;
-    if (k === 'belt') {
-      const shape: BeltShape = g ? this.beltShape(g, b as Building) : 'S';
-      return { tile: beltTile(b.type, b.dir, shape, frame), key: `flat:${b.type}:${b.dir}:${shape}` };
+  // ------------------------------------------------------------ joins: what feeds what
+
+  /**
+   * What stands at a cell as the joins see it: a placement ghost stands in for whatever it would
+   * replace (a blocked ghost only when `ghosts` is set, for other ghosts: it will never be built),
+   * else the building there, built or planned.
+   */
+  private standAt(g: Game, layer: number, x: number, y: number, ghosts: boolean): Stand | null {
+    if (this.ghostAt.size && layer === this.ghostLayer) {
+      const L = g.layer(layer);
+      if (x < 0 || y < 0 || x >= L.w || y >= L.h) return null;
+      const gh = this.ghostAt.get(y * L.w + x);
+      if (gh && (ghosts || gh.ok)) return gh;
     }
-    return { tile: pieceTile(k, b.dir, frame), key: `flat:${b.type}:${b.dir}:S` };
+    return g.at(layer, x, y);
+  }
+
+  /**
+   * Does `f` hand items into cell (x, y), travelling `travel`? The sim's rule (logistics.ts
+   * pushesInto), for buildings and ghosts alike: belts and 1x1 pieces along their facing, a splitter
+   * out of its front and both sides, a sorter out of its front and left, a crossing straight on along
+   * an axis something feeds it on, and buildings out of their output port (and byproduct port).
+   */
+  private pushes(g: Game, layer: number, f: Stand, x: number, y: number, travel: Dir, ghosts: boolean, depth = 0): boolean {
+    const def = BUILDINGS[f.type];
+    if (!def) return false;
+    const k = def.kind;
+    if (isSlot(k)) {
+      if (f.x + DX[travel] !== x || f.y + DY[travel] !== y) return false;
+      if (k === 'crossing') {
+        // A belt crossing a bus lays a crossing per line, side by side, and each passes on what the
+        // one behind it does. The run is straight, so it ends within a map's width (the guard only
+        // bounds the recursion).
+        if (depth > CROSSING_RUN) return false;
+        const b = this.standAt(g, layer, f.x - DX[travel], f.y - DY[travel], ghosts);
+        return !!b && b !== f && this.pushes(g, layer, b, f.x, f.y, travel, ghosts, depth + 1);
+      }
+      if (k === 'splitter') return travel === f.dir || travel === leftOf(f.dir) || travel === rightOf(f.dir);
+      if (k === 'sorter') return travel === f.dir || travel === leftOf(f.dir);
+      return travel === f.dir;
+    }
+    if (travel === f.dir && frontOutput(f.type)) {
+      const p = outputPort(f as Building);
+      if (p.x === x && p.y === y) return true;
+    }
+    if (travel === leftOf(f.dir) && sideOutput(f.type)) {
+      const p = sidePort(f as Building);
+      if (p.x === x && p.y === y) return true;
+    }
+    return false;
+  }
+
+  /** Would `n` ever take an item travelling `travel` into it? The sim's insert() by kind, leaving out what an item is. */
+  private takes(n: Stand, travel: Dir): boolean {
+    switch (BUILDINGS[n.type]?.kind) {
+      case 'belt':
+      case 'crate':
+      case 'machine':
+      case 'elevator':
+      case 'engine_node':
+        return travel !== opp(n.dir);
+      case 'splitter':
+      case 'sorter':
+        return travel === n.dir;
+      case 'sequencer':
+        return travel === rightOf(n.dir) || travel === leftOf(n.dir);
+      case 'crossing':
+      case 'generator':
+      case 'depot':
+      case 'terminal':
+      case 'chute':
+      case 'drill':
+      case 'heart':
+      case 'lab':
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /** Does the neighbour of `b` in direction `a` hand items into it? */
+  private fedFrom(g: Game, layer: number, b: Stand, a: Dir, ghosts: boolean): boolean {
+    const n = this.standAt(g, layer, b.x + DX[a], b.y + DY[a], ghosts);
+    return !!n && n !== b && this.pushes(g, layer, n, b.x, b.y, opp(a), ghosts);
+  }
+
+  /** Does the neighbour of `b` in direction `a` take what `b` hands it that way? */
+  private feedsTo(g: Game, layer: number, b: Stand, a: Dir, ghosts: boolean): boolean {
+    const n = this.standAt(g, layer, b.x + DX[a], b.y + DY[a], ghosts);
+    return !!n && n !== b && this.takes(n, a);
+  }
+
+  /**
+   * A belt's shape and open sides (belts.ts SIDE_ bits). Fed from behind it runs straight, open at
+   * the back and on any hand something feeds into (a side-load); fed from one hand only it curves;
+   * fed by nothing (or from both hands) it runs straight with its back closed, the start of a line.
+   * Its front is open when what is in front takes from it, else closed: the end of a line. A curve
+   * keeps its open bits for the lanes carried into buildings (beltStrips).
+   */
+  private beltLook(g: Game, layer: number, b: Stand, ghosts: boolean): { shape: BeltShape; open: number } {
+    const d = b.dir;
+    const back = this.fedFrom(g, layer, b, opp(d), ghosts);
+    const fromL = this.fedFrom(g, layer, b, leftOf(d), ghosts);
+    const fromR = this.fedFrom(g, layer, b, rightOf(d), ghosts);
+    let open = (back ? SIDE_B : 0) | (fromL ? SIDE_L : 0) | (fromR ? SIDE_R : 0);
+    if (this.feedsTo(g, layer, b, d, ghosts)) open |= SIDE_F;
+    const shape: BeltShape = !back && fromL !== fromR ? (fromL ? 'L' : 'R') : 'S';
+    return { shape, open };
+  }
+
+  /**
+   * A splitter's, sorter's or crossing's open sides: its back where something feeds it, an exit where
+   * what is there takes from it. A crossing is open on a side something feeds it from or it hands on
+   * to; one with nothing joined on any side shows all four open, so it still reads as a crossing.
+   */
+  private pieceOpen(g: Game, layer: number, b: Stand, ghosts: boolean): number {
+    const k = BUILDINGS[b.type].kind;
+    const sides = pieceSides(k);
+    let open = 0;
+    for (let a = 0; a < 4; a++) {
+      const dir = a as Dir;
+      const bit = sideBit(b.dir, dir);
+      if (!(sides & bit)) continue;
+      let on: boolean;
+      if (k === 'crossing') {
+        const n = this.standAt(g, layer, b.x + DX[dir], b.y + DY[dir], ghosts);
+        on = !!n && n !== b && (this.pushes(g, layer, n, b.x, b.y, opp(dir), ghosts) || (this.takes(n, dir) && this.pushes(g, layer, b, b.x + DX[dir], b.y + DY[dir], dir, ghosts)));
+      } else on = bit === SIDE_B ? this.fedFrom(g, layer, b, dir, ghosts) : this.feedsTo(g, layer, b, dir, ghosts);
+      if (on) open |= bit;
+    }
+    return k === 'crossing' && !open ? sides : open;
+  }
+
+  // ------------------------------------------------------------ belts and pieces
+
+  /**
+   * A belt's or logistics piece's tile, joined to its neighbours, in a tint (steel when built), at an
+   * animation frame. `ghosts`: the tile is itself a placement ghost (blocked ghosts count as its
+   * neighbours). `arrow`: a belt gets the ghost's chevron. `strips`: lanes are carried into the
+   * standing buildings it feeds or is fed by.
+   */
+  private drawFlat(g: Game, layer: number, b: Stand, frame: number, tint: Tint, ghosts: boolean, arrow: boolean, strips: boolean): void {
+    const def = BUILDINGS[b.type];
+    const px = b.x * TILE;
+    const py = b.y * TILE;
+    if (def.kind === 'belt') {
+      const look = this.beltLook(g, layer, b, ghosts);
+      this.ctx.drawImage(beltTile(b.type, b.dir, look.shape, frame, look.open, tint, arrow), px, py);
+      if (strips) this.drawStrips(g, layer, b, b.type, look.open, frame, tint, ghosts);
+      return;
+    }
+    const open = this.pieceOpen(g, layer, b, ghosts);
+    this.ctx.drawImage(pieceTile(def.kind, b.dir, frame, open, tint), px, py);
+    if (strips) this.drawStrips(g, layer, b, 'belt', open, frame, tint, ghosts);
+  }
+
+  /**
+   * The lanes of a flat tile carried across its open edges into the standing buildings there, up to
+   * their art: out of an output chute (a side that feeds it) or into an intake (a side it hands on
+   * across). A belt then runs into or out of a building instead of stopping short of its sprite. The
+   * strips lie under the building, which is drawn later.
+   */
+  private drawStrips(g: Game, layer: number, b: Stand, kind: string, open: number, frame: number, tint: Tint, ghosts: boolean): void {
+    for (let a = 0; a < 4; a++) {
+      const dir = a as Dir;
+      if (!(open & sideBit(b.dir, dir))) continue;
+      const tx = b.x + DX[dir];
+      const ty = b.y + DY[dir];
+      const n = this.standAt(g, layer, tx, ty, ghosts);
+      if (!n || n === b || this.isFlat(n.type)) continue;
+      // Into it when this tile hands on that way, else out of it.
+      const into = this.takes(n, dir) && this.pushes(g, layer, b, tx, ty, dir, ghosts);
+      const travel = into ? dir : opp(dir);
+      const depth = this.artDepth(g, n, tx, ty, travel, into);
+      if (depth) this.ctx.drawImage(laneStrip(kind, travel, frame, into, depth, tint), tx * TILE, ty * TILE);
+    }
+  }
+
+  /**
+   * How far in from the footprint's edge building `n`'s art starts, at each pixel across a lane that
+   * crosses into its edge tile (tx, ty) travelling `travel`: `into` it (the strip starts at the tile's
+   * near edge), or out of it (the strip ends at the edge it shares with the lane's tile). Indexed by
+   * the lane's canonical across coordinate (belts.ts). Up to STRIP_MAX; 0 where the art doesn't come
+   * that close. One more pixel on a building's south face, so a 2x2 machine's 1 px work shudder never
+   * opens a gap. Cached per sprite, tile and direction.
+   */
+  private artDepth(g: Game, n: Stand, tx: number, ty: number, travel: Dir, into: boolean): number[] | null {
+    const name = this.standName(g, n);
+    const s = sprite(name);
+    if (!s) return null;
+    const key = `${name}:${tx - n.x}:${ty - n.y}:${travel}:${into ? 1 : 0}`;
+    const had = this.depths.get(key);
+    if (had && had.s === s) return had.d;
+    const m = this.mask(name);
+    let out: number[] | null = null;
+    if (m) {
+      out = [];
+      // Step from the shared edge into the building: the lane's own direction into it, against it out of it.
+      const step = into ? travel : opp(travel);
+      const south = step === 0;
+      let any = false;
+      for (let v = 0; v < 16; v++) {
+        // The canonical edge pixel at this across coordinate (belts.ts map), in the building's sprite.
+        const u = into ? 0 : 15;
+        const [lx, ly] = travel === 1 ? [u, v] : travel === 2 ? [15 - v, u] : travel === 3 ? [15 - u, 15 - v] : [v, 15 - u];
+        let x = (tx - n.x) * TILE + lx;
+        let y = (ty - n.y) * TILE + ly;
+        let k = 0;
+        for (; k < STRIP_MAX; k++) {
+          if (x >= 0 && y >= 0 && x < m.w && y < m.h && m.a[y * m.w + x]) break;
+          x += DX[step];
+          y += DY[step];
+        }
+        const dd = k >= STRIP_MAX ? 0 : south ? Math.min(STRIP_MAX, k + 1) : k;
+        if (dd) any = true;
+        out.push(dd);
+      }
+      if (!any) out = null;
+    }
+    this.depths.set(key, { s, d: out });
+    return out;
+  }
+
+  /** The animation frame of a ghost belt: it runs on real time, so it moves while the game is paused too. */
+  private ghostFrame(type: string, t: number): number {
+    return Math.floor(t * GHOST_PX_PER_S * ((BUILDINGS[type]?.speed ?? 1.5) / 1.5));
+  }
+
+  /**
+   * The ghost's bold chevron just outside the face its output leaves by (and a #a8b5b2 one at a
+   * byproduct port), so "R rotates the output" shows; a 1x1 piece that hands on out of its front
+   * (Unloader, Crate, Sequencer) gets one in front of it.
+   */
+  private outArrow(b: { type: string; x: number; y: number; dir: Dir }, tint: Exclude<Tint, 'steel'>): void {
+    const k = BUILDINGS[b.type]?.kind;
+    const at = b as Building;
+    if (frontOutput(b.type) || k === 'unloader' || k === 'crate' || k === 'sequencer') {
+      const p = outputPort(at);
+      this.ctx.drawImage(arrowTile(b.dir, tint), p.x * TILE, p.y * TILE);
+    }
+    if (sideOutput(b.type)) {
+      const p = sidePort(at);
+      this.ctx.drawImage(arrowTile(leftOf(b.dir), tint, C.steel3), p.x * TILE, p.y * TILE);
+    }
   }
 
   private drawBuildings(g: Game, v: View, o: RenderOpts, blds: Building[]): void {
     const ctx = this.ctx;
     const tick = g.s.tick;
-    // Belts and pieces first, flat on the ground. Their frame comes from the sim tick.
+    // Belts and pieces first, flat on the ground. Their frame comes from the sim tick; a planned one
+    // stands still in the planned tint with its chevron, so its direction shows before it is built.
+    const L = g.layer(v.layer);
     for (const b of blds) {
       if (!this.isFlat(b.type)) continue;
+      // A placement ghost that would replace it is drawn instead (a curve's open corners would show
+      // the old tile through).
+      if (this.ghostAt.get(b.y * L.w + b.x)?.ok) continue;
       const def = BUILDINGS[b.type];
-      const px = b.x * TILE;
-      const py = b.y * TILE;
       if (b.planned) {
-        const f = this.flatTile(g, b, 0);
-        ctx.drawImage(this.dithered(f.key, f.tile, 0, 0, 16, 16, GHOST_PLANNED), px, py);
+        this.drawFlat(g, v.layer, b, 0, 'planned', false, true, true);
         continue;
       }
-      ctx.drawImage(this.flatTile(g, b, beltFrame(tick, def.speed ?? 1.5)).tile, px, py);
-      if (def.kind === 'sorter' && b.filter) this.drawIcon12(b.filter, px, py);
+      this.drawFlat(g, v.layer, b, beltFrame(tick, def.speed ?? 1.5), 'steel', false, false, true);
+      if (def.kind === 'sorter' && b.filter) this.drawFilter(b.filter, b.x * TILE, b.y * TILE);
     }
     // Shadows under everything that stands.
     for (const b of blds) {
@@ -937,11 +1303,14 @@ export class WorldRenderer {
     const s = sprite(name);
     const px = b.x * TILE;
     if (b.planned) {
-      // Planned ghost: the sprite at 50% #4f8fba dither, with its chutes so the facing shows.
+      // Planned ghost, as a placement ghost looks: the sprite kept whole with its line work and a
+      // 1 px outline in #4f8fba, its dashed footprint, its chutes and the chevron where its output leaves.
       const py = b.y * TILE;
-      if (s) ctx.drawImage(this.dithered(`b:${name}`, s.img, s.x, s.y, s.w, s.h, GHOST_PLANNED), px, py);
+      const gs = this.ghostSprite(name, 'planned');
+      if (gs) ctx.drawImage(gs, px - 1, py - 1);
       this.dashedRect(px, py, def.size * TILE, def.size * TILE, GHOST_PLANNED, t);
       this.drawChutes(b, false);
+      this.outArrow(b, 'planned');
       return;
     }
     if (s) {
@@ -1086,10 +1455,13 @@ export class WorldRenderer {
     ctx.fillRect(x + 15, y + 13, 1, 3);
   }
 
-  /** The middle 12x12 of an item icon over a 16 px tile (sorter filters). */
-  private drawIcon12(id: string, px: number, py: number): void {
+  /**
+   * A sorter's filter in its window (belts.ts): the item icon's middle 10 x 10, as the Unloader and
+   * the Crate show theirs, on the dark glass, so it never reads as an item riding the belt.
+   */
+  private drawFilter(id: string, px: number, py: number): void {
     const s = sprite(`i_${id}`);
-    if (s) this.ctx.drawImage(s.img, s.x + 2, s.y + 2, 12, 12, px + 2, py + 2, 12, 12);
+    if (s) this.ctx.drawImage(s.img, s.x + 3, s.y + 3, 10, 10, px + 3, py + 3, 10, 10);
   }
 
   /** Direction marks and item icons on 1x1 sprite pieces (unloader, crate, sequencer). */
@@ -1193,49 +1565,19 @@ export class WorldRenderer {
     ctx.fillRect(x, y, Math.round((w * have) / Math.max(1, need)), 3);
   }
 
-  private beltShape(g: Game, b: Building): BeltShape {
-    const d = b.dir;
-    const feeds = (nx: number, ny: number, travel: Dir, back: boolean): boolean => {
-      const n = g.at(b.layer, nx, ny);
-      if (!n || n.planned) return false;
-      const nd = BUILDINGS[n.type];
-      const k: string = nd.kind;
-      if (isSlot(nd.kind)) {
-        if (k === 'splitter') return travel === n.dir || travel === leftOf(n.dir) || travel === rightOf(n.dir);
-        if (k === 'sorter') return travel === n.dir || travel === leftOf(n.dir);
-        if (k === 'crossing') return back;
-        return n.dir === travel;
-      }
-      // Machines push out of one port cell (and byproducts out of the side port).
-      if (frontOutput(n.type)) {
-        const p = outputPort(n);
-        if (p.x === b.x && p.y === b.y) return travel === n.dir;
-      }
-      if (sideOutput(n.type)) {
-        const s = sidePort(n);
-        if (s.x === b.x && s.y === b.y) return travel === leftOf(n.dir);
-      }
-      return false;
-    };
-    if (feeds(b.x - DX[d], b.y - DY[d], d, true)) return 'S';
-    const l = leftOf(d);
-    const r = rightOf(d);
-    const fromLeft = feeds(b.x + DX[l], b.y + DY[l], r, false);
-    const fromRight = feeds(b.x + DX[r], b.y + DY[r], l, false);
-    if (fromLeft && !fromRight) return 'L';
-    if (fromRight && !fromLeft) return 'R';
-    return 'S';
-  }
-
   // ------------------------------------------------------------ items on belts
 
-  /** Where an item sits along its path through a slot, at visual progress `p` (tile units). */
+  /**
+   * Where an item sits along its path through a slot, at visual progress `p` (tile units). On a curve
+   * it follows the arc; on a straight belt an item fed in from a side comes in through that side's
+   * opening to the middle, then runs on to the front.
+   */
   private itemPos(g: Game, b: Building, second: boolean, p: number): { x: number; y: number } {
     const isBelt = BUILDINGS[b.type].kind === 'belt';
     const inDir = second ? b.inDir2 : b.inDir;
     const outDir = second ? b.inDir2 : b.outDir;
     if (isBelt && inDir !== b.dir && !second) {
-      const shape = this.beltShape(g, b);
+      const shape = this.beltLook(g, b.layer, b, false).shape;
       const fromLeft = inDir === rightOf(b.dir);
       if ((shape === 'L' && fromLeft) || (shape === 'R' && !fromLeft)) {
         // Follow the arc: canonical east-facing, pivot at the inner corner.
@@ -2056,38 +2398,123 @@ export class WorldRenderer {
 
   // ------------------------------------------------------------ ghosts
 
+  /**
+   * Placement ghosts. A belt or piece is its real tile joined as it would be (curving where the drag
+   * turns, side-loading or turning into or out of what stands), its rungs running on real time and
+   * its rails in the ghost's colour, with a bold chevron on a belt. A building is its sprite kept
+   * whole in the ghost's outline and dither, its dashed footprint, its chutes with the port cells
+   * bracketed and a chevron just outside the face its output leaves by. Blocked ghosts are coral,
+   * planned ones (built when the depot has the goods) blue. A piece the drag leaves alone is not drawn.
+   */
   private drawGhosts(g: Game, v: View, o: RenderOpts): void {
     const ctx = this.ctx;
     for (const gh of o.ghosts) {
       const def = BUILDINGS[gh.type];
-      if (!def) continue;
+      if (!def || gh.skip) continue;
       const px = gh.x * 16;
       const py = gh.y * 16;
       const S = def.size * 16;
-      const col = !gh.ok ? GHOST_BAD : gh.planned ? GHOST_PLANNED : GHOST_OK;
+      const tint: Exclude<Tint, 'steel'> = !gh.ok ? 'bad' : gh.planned ? 'planned' : 'ok';
       if (this.isFlat(gh.type)) {
-        const f = this.flatTile(null, { type: gh.type, dir: gh.dir, x: gh.x, y: gh.y, layer: v.layer }, 0);
-        ctx.drawImage(this.dithered(f.key, f.tile, 0, 0, 16, 16, col), px, py);
+        this.drawFlat(g, v.layer, gh, this.ghostFrame(gh.type, o.time), tint, true, true, false);
         continue;
       }
-      const name = gh.type === 'drill' ? 'b_drill' : `b_${gh.type}`;
-      const s = sprite(name);
-      if (s) ctx.drawImage(this.dithered(`b:${name}`, s.img, s.x, s.y, s.w, s.h, col), px, py);
-      this.dashedRect(px, py, S, S, col, o.time);
-      if (def.size === 1 && isSlot(def.kind)) {
-        // Facing mark for the 1x1 sprite pieces that have one (unloader, crate, sequencer).
-        ctx.fillStyle = C.white;
-        const cx = px + 8 + DX[gh.dir] * 4;
-        const cy = py + 8 + DY[gh.dir] * 4;
-        ctx.fillRect(cx - 1, cy - 1, 3, 3);
-      } else {
-        // Where the output (and byproduct) leaves, the same chutes the built sprite gets, with
-        // the port cells bracketed so the belt can be laid to them.
-        this.drawChutes(gh, true);
-      }
+      const gs = this.ghostSprite(gh.type === 'drill' ? 'b_drill' : `b_${gh.type}`, tint);
+      if (gs) ctx.drawImage(gs, px - 1, py - 1);
+      this.dashedRect(px, py, S, S, TINT_COL[tint], o.time);
+      // Where the output (and byproduct) leaves: the same chutes the built sprite gets, the port
+      // cells bracketed so the belt can be laid to them, and the chevron in them.
+      this.drawChutes(gh, true);
+      this.outArrow(gh, tint);
       // A machine that takes part in interference shows how far it reaches.
       if (g.s.deepest >= INTERFERENCE_LAYER && ringed(gh.type)) this.ring(gh.x, gh.y, def.size);
     }
+  }
+
+  // ------------------------------------------------------------ the tutorial's guides, hold to remove
+
+  /**
+   * Where the tutorial points (RenderOpts.guides): a bracket at each corner of the tile rect, 2 px
+   * thick in #e8c170 (#de9e41 as it closes in) inside a #090a14 outline that reads on any floor,
+   * swinging 2 to 4 px out and back on the beacons' beat, and a chevron bobbing above the rect
+   * pointing down at it. The motion is what catches the eye at zoom 1. Drawn above the darkness and
+   * everything built.
+   */
+  private drawGuides(rects: TileRect[], t: number): void {
+    const ctx = this.ctx;
+    const beat = (t * 0.6) % 1;
+    const out = [2, 3, 4, 3][Math.floor(beat * 4)];
+    const col = out >= 3 ? C.pale : C.gold;
+    const bob = Math.round(2 * Math.sin(t * 5));
+    for (const r of rects) {
+      const x0 = r.x * TILE - out;
+      const y0 = r.y * TILE - out;
+      const x1 = (r.x + r.w) * TILE + out - 1;
+      const y1 = (r.y + r.h) * TILE + out - 1;
+      const arm = Math.max(5, Math.min(10, Math.floor((Math.min(r.w, r.h) * TILE) / 3)));
+      // Each corner as two 2 px bars; the outline first, then the colour over it.
+      const bars = (pad: number, c: string) => {
+        ctx.fillStyle = c;
+        for (const [cx, sx] of [
+          [x0, 1],
+          [x1, -1],
+        ] as const) {
+          for (const [cy, sy] of [
+            [y0, 1],
+            [y1, -1],
+          ] as const) {
+            const hx = sx > 0 ? cx : cx - arm + 1;
+            const vy = sy > 0 ? cy : cy - arm + 1;
+            ctx.fillRect(hx - pad, (sy > 0 ? cy : cy - 1) - pad, arm + 2 * pad, 2 + 2 * pad);
+            ctx.fillRect((sx > 0 ? cx : cx - 1) - pad, vy - pad, 2 + 2 * pad, arm + 2 * pad);
+          }
+        }
+      };
+      bars(1, C.ink);
+      bars(0, col);
+      // The pointer: the ghost's chevron turned down, over the middle of the top edge.
+      const ax = Math.round((x0 + x1 + 1) / 2) - 8;
+      const ay = y0 - 15 + bob;
+      ctx.drawImage(arrowTile(2, 'ok', col), ax, ay);
+    }
+  }
+
+  /**
+   * Holding the right button on a building to remove it (RenderOpts.removeHold): a 50% #cf573c checker
+   * sweeps over its footprint from the left as the hold fills, led by a solid #cf573c line, inside a
+   * 1 px #cf573c outline just outside the footprint, so a removal reads as deliberate.
+   */
+  private drawRemoveHold(r: TileRect & { frac: number }, t: number): void {
+    const ctx = this.ctx;
+    const x0 = r.x * TILE;
+    const y0 = r.y * TILE;
+    const w = r.w * TILE;
+    const h = r.h * TILE;
+    const f = Math.max(0, Math.min(1, r.frac));
+    const sw = Math.round(w * f);
+    if (!this.removeFill) {
+      const c = document.createElement('canvas');
+      c.width = 2;
+      c.height = 2;
+      const pc = c.getContext('2d')!;
+      pc.fillStyle = C.coral;
+      pc.fillRect(0, 0, 1, 1);
+      pc.fillRect(1, 1, 1, 1);
+      this.removeFill = ctx.createPattern(c, 'repeat');
+    }
+    if (sw > 0 && this.removeFill) {
+      // The pattern sits in world space (the transform holds the camera), so the checker never crawls.
+      ctx.fillStyle = this.removeFill;
+      ctx.fillRect(x0, y0, sw, h);
+      ctx.fillStyle = C.coral;
+      if (sw < w) ctx.fillRect(x0 + sw - 1, y0, 1, h);
+    }
+    // The outline blinks between coral and ink once the hold is nearly through.
+    ctx.fillStyle = f > 0.85 && Math.floor(t * 8) % 2 ? C.ink : C.coral;
+    ctx.fillRect(x0 - 1, y0 - 1, w + 2, 1);
+    ctx.fillRect(x0 - 1, y0 + h, w + 2, 1);
+    ctx.fillRect(x0 - 1, y0, 1, h);
+    ctx.fillRect(x0 + w, y0, 1, h);
   }
 }
 

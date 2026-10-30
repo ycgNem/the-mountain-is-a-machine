@@ -2,6 +2,20 @@
 
 The in-game "What's new" window reads this file. Newest version first; write for players.
 
+## v0.2 - Build it yourself
+
+- A new game starts empty: the HQ, the Shipping Terminal and the broken Drill. You place the first
+  Miner, Smelter, belts and Press yourself, one step at a time, with a hint for each step and a
+  marker on the map where it goes. The Dig tool (E) is taught too: a ridge in Act I to dig through,
+  and again when you reach the Shallows.
+- Right-click no longer removes anything: it cancels the tool or closes the panel. To remove, use
+  the Remove tool (X), or hold the right button on a building for half a second. Ctrl+Z puts back
+  the last removal.
+- Placing a belt shows the real belt with arrows, turns included, so you can see which way it runs.
+- Belts join seamlessly: no seams at turns, side joins or splitters, and they run into machines.
+- A new font and a refreshed interface. Every rate carries its unit ("30/min"), the top bar shows
+  INCOME per minute, and a machine's panel says what it really makes against full speed.
+
 ## v0.1 - First build
 
 The whole game, start to finish: six layers, thirty-one milestones, six drill projects and an ending.
@@ -20,7 +34,6 @@ The whole game, start to finish: six layers, thirty-one milestones, six drill pr
 - The drill's time estimate follows its slowest good, and says "No supply" (with that good's count
   in red) when a good it needs has nothing coming in.
 - Assay each strange material in an Assay Lab to learn its rules and unlock what it makes.
-- The starter line on the Surface is already running when you arrive: the first sale lands in seconds.
 - Every layer with coal by its shaft (all but the Crystal Depths) opens on a running coal rig, its
   generator already stocked, so it has power from the first second even when the layer above has
   none to spare.

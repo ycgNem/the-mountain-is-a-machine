@@ -99,8 +99,25 @@ export function deserialize(json: string): Game {
     const L = layers[b.layer];
     for (let dy = 0; dy < size; dy++) for (let dx = 0; dx < size; dx++) L.occ[(b.y + dy) * L.w + b.x + dx] = b.id;
   }
+  if ((d.version ?? 1) < 4) migrateMilestones(d);
   const s: GameState = { ...d, layers, buildings, version: SAVE_VERSION };
   return new Game(s);
+}
+
+/**
+ * Version 3 saves and older: Act I gained a second milestone (Plates for the HQ, n 2, index 1), so
+ * the open milestone from the Copper Line on (index 1 or more) and every finished one from n 2 on move
+ * up by one. A save past First Light ran the line that came ready-made, whose Press stocked the HQ,
+ * and its First Light had the Drill clicked: Plates for the HQ counts as done too. Its old reward was
+ * First Light's $50, which the two now share, so no money changes hands. Terrain is left as it was:
+ * an older map has no ridge for the Copper Line's dig step (its copper belts may run there), and that
+ * step counts the ridge's tiles that aren't rock (progress.ts), so it is done whenever it comes up.
+ */
+function migrateMilestones(d: { milestone?: number; msDone?: number[] }): void {
+  const was = d.msDone ?? [];
+  d.msDone = was.map((n) => (n >= 2 ? n + 1 : n));
+  if (was.includes(1)) d.msDone.splice(d.msDone.indexOf(1) + 1, 0, 2);
+  if ((d.milestone ?? 0) >= 1) d.milestone = (d.milestone ?? 0) + 1;
 }
 
 /** Version 1 saves: the amber rock was decor 5 on the Shallows; values past a layer's decor list are cleared. */

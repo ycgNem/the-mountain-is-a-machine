@@ -1,4 +1,5 @@
-// Apollo 46 by AdamCYounis. Every pixel the game draws comes from here (STYLE.md).
+// Apollo 46 by AdamCYounis. Every pixel the game draws comes from here (STYLE.md). The rows below
+// are ramps, dark to light: src/ui/ui.ts tone() steps along them.
 
 export const APOLLO = [
   // blues
@@ -71,6 +72,46 @@ export const C = {
   magenta: '#a23e8c',
   pink: '#c65197',
   rose: '#df84a5',
+} as const;
+
+/**
+ * The UI's named colours (src/ui/ui.ts, STYLE.md "UI"), every one from the set above. The HUD, the
+ * inspector and the windows use these names, so money, a rate or a warning reads the same everywhere.
+ */
+export const UIC = {
+  /** Body text. */
+  text: C.white,
+  /** Secondary text: tooltip bodies, descriptions. */
+  soft: C.steel3,
+  /** Labels, hints and units: the "/min" after a rate. */
+  dim: C.steel2,
+  /** Disabled text. */
+  off: C.steel,
+  /** Panel titles (on the title plate). */
+  title: C.pale,
+  /** Section headers. */
+  head: C.gold,
+  money: C.pale,
+  power: C.cyan,
+  good: C.lime,
+  warn: C.gold,
+  bad: C.coral,
+  link: C.cyan,
+  /** Frames and plates, lit from the top left: the outline, the lit edge, the body, the shaded edge. */
+  outline: C.ink,
+  lit: C.steel,
+  frame: C.slate,
+  shade: C.panel2,
+  /** A panel's content well and its shadowed inner wall. */
+  well: C.panel,
+  wellShadow: C.night,
+  /** A button's face, and its hovered face. */
+  face: C.panel2,
+  faceHover: C.slate,
+  /** An active (latched) button or tab. */
+  active: C.amber,
+  activeHover: C.gold,
+  danger: C.crimson,
 } as const;
 
 export function hexToRgb(hex: string): [number, number, number] {

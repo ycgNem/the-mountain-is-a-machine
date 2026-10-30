@@ -90,7 +90,10 @@ export const LAYERS: LayerDef[] = [
       { ore: 'copper_ore', x: 12, y: 38, r: 2, purity: 1 },
       { ore: 'stone', x: 28, y: 39, r: 2, purity: 1 },
     ],
-    starterCrate: { iron_plate: 100, gear: 30, copper_wire: 20, brick: 30 },
+    // The player builds the first line now (Act I's tutorial): the crate holds what the line that used
+    // to come ready-made cost (a Miner, a Smelter, a Press, a Splitter and 14 belts: 40 plates and 11
+    // gears), so Act I's economy is where it was.
+    starterCrate: { iron_plate: 140, gear: 41, copper_wire: 20, brick: 30 },
     requests: { iron_plate: 20, gear: 10, copper_wire: 10 },
     title: 'The Dig Site',
     subtitle: 'Old Thrum, Halloran Deep Mining Co.',

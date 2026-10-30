@@ -1,8 +1,10 @@
 // Start states for testing, screenshots and critics: ?scenario=<name>.
 
+import { BUILDINGS } from '../data/buildings';
 import { LAYERS } from '../data/layers';
 import { ASSAYS, MILESTONES, PROJECTS } from '../data/progression';
 import { Game } from '../sim/game';
+import { outcropCells } from '../sim/mapgen';
 import { completeProject, startMilestone } from '../sim/progress';
 import { T_FLOOR, T_ROCK, type Dir } from '../sim/types';
 
@@ -10,6 +12,54 @@ export const SCENARIOS = ['start', 'surface', 'shallows', 'fungal', 'crystal', '
 
 function runSeconds(g: Game, s: number): void {
   for (let i = 0; i < s * 60; i++) g.tick();
+}
+
+/**
+ * The iron line a new game used to open with, as if the player had built it from the HQ's crate (its
+ * cost comes out of the HQ, so the stock is what a new game used to have) and it had been running a
+ * while: ore on the belts into the Smelter, ingots in its buffer and on every other belt after it.
+ * Miner (16,24) E -> Smelter (22,24) E -> Splitter (25,25) E: ahead to the Shipping Terminal, left up
+ * into the Press (25,22) N, whose plates run up into the HQ. Every scenario past a new game and the
+ * act bots' start states (tests/play/start.ts) build on it.
+ */
+export function layStarterLine(g: Game): void {
+  const L = g.layer(0);
+  const put = (type: string, x: number, y: number, dir: Dir) => {
+    g.pay(L, BUILDINGS[type].cost);
+    return g.forcePlace(type, 0, x, y, dir);
+  };
+  put('miner', 16, 24, 1);
+  const smelter = put('smelter', 22, 24, 1);
+  smelter.recipe = 'iron_ingot';
+  for (let x = 18; x <= 21; x++) put('belt', x, 25, 1);
+  put('belt', 24, 25, 1);
+  put('splitter', 25, 25, 1);
+  for (let x = 26; x <= 31; x++) put('belt', x, 25, 1);
+  put('belt', 25, 24, 0);
+  const press = put('press', 25, 22, 0);
+  press.recipe = 'iron_plate';
+  put('belt', 26, 21, 0);
+  put('belt', 26, 20, 0);
+  const fill = (x: number, y: number, id: string) => {
+    const b = g.at(0, x, y)!;
+    b.item = { id, heat: 0 };
+    b.prog = 0.5;
+    b.inDir = b.dir;
+    b.outDir = b.dir;
+  };
+  for (let x = 18; x <= 21; x++) fill(x, 25, 'iron_ore');
+  for (const x of [24, 26, 28, 30]) fill(x, 25, 'iron_ingot');
+  fill(25, 24, 'iron_ingot');
+  smelter.outBuf = [
+    { id: 'iron_ingot', heat: 0 },
+    { id: 'iron_ingot', heat: 0 },
+  ];
+}
+
+/** The Surface ridge between the copper and the Terminal dug out of the way (it costs nothing here). */
+export function digOutcrop(g: Game): void {
+  const L = g.layer(0);
+  for (const c of outcropCells()) if (L.terrain[c.y * L.w + c.x] === T_ROCK) g.digCell(0, c.x, c.y);
 }
 
 /** Complete drill projects until `layer` is open, as if played. */
@@ -84,14 +134,25 @@ function depotLoop(g: Game, layer: number, input: string, machines: { type: stri
 
 export function buildScenario(name: string): Game {
   const g = Game.create(20261030);
+  // Past a new game, the Surface has the first line the tutorial builds, and the rock between the
+  // copper and the Terminal is dug out.
+  if (name !== 'start') {
+    layStarterLine(g);
+    digOutcrop(g);
+  }
   g.events.length = 0;
   switch (name) {
     case 'start':
       break;
     case 'surface': {
-      // A real mid-Act I state: only what a player has at milestone 4.
+      // A real mid-Act I state: only what a player has at milestone 5 (Brickwork). Brickwork is open
+      // while the lines run in (there is no stone line yet), so no milestone pays out on the way.
+      startMilestone(g, 4, true);
+      g.s.msDone = [1, 2, 3, 4];
+      // Wire and Gears' reward (M4), as if it had been earned.
+      g.s.licenses.push('sorter');
       stock(g, 0, { iron_plate: 200, gear: 100, copper_wire: 100, brick: 100 });
-      // Copper line: the marked Miner, a Smelter, then west into the terminal's east side.
+      // Copper line: a Miner on the copper, a Smelter, then west into the terminal's east side.
       g.place('miner', 0, 43, 20, 2);
       g.place('belt', 0, 43, 22, 2);
       g.place('belt', 0, 43, 23, 2);
@@ -111,10 +172,6 @@ export function buildScenario(name: string): Game {
       g.place('belt', 0, 34, 14, 0);
       g.s.money = 2400;
       runSeconds(g, 40);
-      startMilestone(g, 3, true);
-      g.s.msDone = [1, 2, 3];
-      // M3's reward, as if it had been earned.
-      if (!g.s.licenses.includes('sorter')) g.s.licenses.push('sorter');
       break;
     }
     case 'shallows': {

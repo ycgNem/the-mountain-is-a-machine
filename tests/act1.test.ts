@@ -18,7 +18,7 @@ function summary(title: string, bot: Bot, g: Game, ms: number): string[] {
   const out: string[] = [];
   const d1 = bot.projectTimes.d1;
   out.push(`=== ${title} (seed 20261030), ${(ms / 1000).toFixed(1)} s real time for ${mmss(g.s.time)} game time ===`);
-  out.push(`Milestones: ${[1, 2, 3, 4, 5, 6, 7].map((n) => `M${n} ${bot.msTimes[n] !== undefined ? mmss(bot.msTimes[n]) : '--:--'}`).join('  ')}`);
+  out.push(`Milestones: ${[1, 2, 3, 4, 5, 6, 7, 8].map((n) => `M${n} ${bot.msTimes[n] !== undefined ? mmss(bot.msTimes[n]) : '--:--'}`).join('  ')}`);
   out.push(
     `D1 complete: ${d1 !== undefined ? mmss(d1) : 'NOT DONE'} (PLAN §8 Act I band ${mmss(ACT1_BAND.from)}-${mmss(ACT1_BAND.to)}: ` +
       `${d1 === undefined ? 'missed' : d1 < ACT1_BAND.from ? 'too fast' : d1 > ACT1_BAND.to ? 'too slow' : 'inside'}); first sale ${bot.firstSaleAt >= 0 ? mmss(bot.firstSaleAt) : '--:--'}, first building ${bot.firstBuildAt >= 0 ? mmss(bot.firstBuildAt) : '--:--'}`,
@@ -66,8 +66,8 @@ describe('Act I pacing bot', () => {
     expect(bot.rushes).toEqual([]);
     expect(bot.jams).toEqual([]);
     // The bot reads what the game says to the end (g.events keeps only the last 400, full by about
-    // 8 minutes in): Mags's intro to D1 (M6) and the Board's memo at the breakthrough.
-    expect(bot.messages.some((m) => m.who === 'mags' && m.text === MILESTONES.find((x) => x.n === 6)?.intro)).toBe(true);
+    // 8 minutes in): Mags's intro to D1 (M7) and the Board's memo at the breakthrough.
+    expect(bot.messages.some((m) => m.who === 'mags' && m.text === MILESTONES.find((x) => x.n === 7)?.intro)).toBe(true);
     expect(bot.messages.some((m) => m.who === 'board' && m.text.includes('breakthrough to the Shallows'))).toBe(true);
   });
 

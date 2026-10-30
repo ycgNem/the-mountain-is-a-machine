@@ -6,6 +6,7 @@
 // reach the act only by riding the elevators: pulled down by its depot's requests, or carried as
 // belt cargo from a station supply. Nothing is ever put straight into the act's own depot.
 
+import { digOutcrop, layStarterLine } from '../../src/app/scenarios';
 import { LAYERS } from '../../src/data/layers';
 import { MILESTONES, PROJECTS } from '../../src/data/progression';
 import { ELEVATOR_UPGRADES, upgradeElevator } from '../../src/sim/elevator';
@@ -59,7 +60,7 @@ export interface SupplySpec {
 }
 
 /**
- * Money in the bank when each act starts. Act II: what the Act I bot really has at D1 ($383, M6's
+ * Money in the bank when each act starts. Act II: what the Act I bot really has at D1 ($374, M7's
  * reward included, since review-3 K11 halved Act I's milestone cash; it was $1,237).
  * Later acts: the previous act's breakthrough reward plus half its other milestone rewards (the
  * other half went on digging, surveys and upgrades), so money is slightly short in an act's first
@@ -167,7 +168,7 @@ const ACT_ASSAYS: Record<number, string[]> = { 3: ['sapstone', 'glowcap', 'resin
 /** Event flags each finished act's milestones raised. */
 const ACT_EVENTS: Record<number, string[]> = {
   1: ['first_sale', 'drill_inspected', 'line_upgraded'],
-  2: ['bore_site_reached', 'bore_1', 'generator_fueled'],
+  2: ['surveyed', 'bore_site_reached', 'bore_1', 'generator_fueled'],
   4: ['shield_blocking'],
   5: ['thermal_running'],
 };
@@ -215,6 +216,10 @@ export interface StartOpts {
 export function startAct(act: ActNo, seedOrOpts: number | StartOpts = {}): { g: Game; bot: Bot } {
   const opts: StartOpts = typeof seedOrOpts === 'number' ? { seed: seedOrOpts } : seedOrOpts;
   const g = Game.create(opts.seed ?? SEED);
+  // Act I's tutorial line (the one a new game used to open with) runs in every start state, and the
+  // Copper Line dug the rock out of its way.
+  layStarterLine(g);
+  digOutcrop(g);
   const s = g.s;
   const layer = actLayer(act);
   // Earlier drill projects, delivered and completed: breakthrough builds every shaft, station, depot and rig.

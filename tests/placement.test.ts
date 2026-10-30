@@ -73,6 +73,24 @@ describe('belt drags', () => {
     for (const p of g.planDrag(0, 'belt', pieces)) if (!p.skip) g.place(p.type, 0, p.x, p.y, p.dir);
     expect(g.at(0, 20, 30)?.dir).toBe(0);
   });
+
+  it("a drag that starts on a line's last belt turns it, so the line carries on into the drag", () => {
+    const g = sandbox();
+    // A line east along y = 30 whose last belt, (14,30), hands on to nothing: a new player's first
+    // leg, extended round a corner with a second drag from its end.
+    for (let x = 10; x <= 14; x++) g.place('belt', 0, x, 30, 1);
+    const pieces = [30, 31, 32, 33].map((y) => ({ x: 14, y, dir: 2 as const }));
+    expect(g.planDrag(0, 'belt', pieces)[0]).toMatchObject({ x: 14, y: 30, type: 'belt', dir: 2, skip: false });
+    expect(g.placeDrag(0, 'belt', pieces).refused).toEqual([]);
+    expect(g.at(0, 14, 30)).toMatchObject({ type: 'belt', dir: 2 });
+    const crate = g.forcePlace('crate', 0, 14, 34, 2);
+    for (const x of [10, 12]) Object.assign(g.at(0, x, 30)!, { item: { id: 'gear', heat: 0 }, prog: 0.5, inDir: 1, outDir: 1 });
+    run(g, 10);
+    expect(crate.stockCount + (crate.item ? 1 : 0)).toBe(2);
+    // A belt that hands on to another is a line's straight run: the same drag from it still crosses it (K7).
+    for (let x = 10; x <= 15; x++) g.place('belt', 0, x, 40, 1);
+    expect(g.planDrag(0, 'belt', [40, 41, 42].map((y) => ({ x: 14, y, dir: 2 as const })))[0]).toMatchObject({ x: 14, y: 40, type: 'crossing' });
+  });
 });
 
 describe('placement rules', () => {

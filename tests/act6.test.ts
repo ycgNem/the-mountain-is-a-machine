@@ -43,8 +43,8 @@ describe('Act VI pacing bot', () => {
 
     expect(bot.g.s.ended, 'the Governor should be delivered and the ending reached').toBe(true);
     expect(actEnd, 'the Governor should complete').toBeDefined();
-    // M31 (The Governor) lands with the ending, before the game stops looking at milestones.
-    for (const n of [27, 28, 29, 30, 31]) expect(bot.msTimes[n], `milestone ${n}`).toBeGreaterThanOrEqual(bot.t0);
+    // M32 (The Governor) lands with the ending, before the game stops looking at milestones.
+    for (const n of [28, 29, 30, 31, 32]) expect(bot.msTimes[n], `milestone ${n}`).toBeGreaterThanOrEqual(bot.t0);
     expect(actEnd!).toBeLessThanOrEqual(ACT6_CAP);
     // The bot plays with no reading or placing time, so it may land under the band's floor (the
     // summary says so); the ceiling, with a little slack, is the bound that must hold.

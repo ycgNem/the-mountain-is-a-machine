@@ -1,6 +1,7 @@
 // Money: contracts at the Company Chute (review 2, C12) and what the $/min readout counts (C13).
 
 import { describe, expect, it } from 'vitest';
+import { layStarterLine } from '../src/app/scenarios';
 import { ITEMS } from '../src/data/items';
 import { MILESTONES } from '../src/data/progression';
 import { Game } from '../src/sim/game';
@@ -63,11 +64,14 @@ describe('C12: contracts at the Company Chute', () => {
 describe('C13: the $/min readout', () => {
   it('counts sales and contract pay, not milestone rewards', () => {
     const g = Game.create(1);
+    layStarterLine(g);
     run(g, 3);
     expect(g.s.stats.events.first_sale).toBe(1);
     const income = g.incomePerMin();
     const money = g.s.money;
-    g.s.stats.events.drill_inspected = 1;
+    // First Light's last steps, as if its ingots were made and shipped this instant.
+    g.s.stats.produced.iron_ingot = (g.s.stats.produced.iron_ingot ?? 0) + 1;
+    g.s.stats.sold.iron_ingot = (g.s.stats.sold.iron_ingot ?? 0) + 5;
     checkMilestones(g);
     expect(g.s.msDone).toContain(1);
     expect(g.s.money).toBe(money + (MILESTONES[0].reward.money ?? 0));

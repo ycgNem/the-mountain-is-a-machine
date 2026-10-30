@@ -1,37 +1,107 @@
 import { describe, expect, it } from 'vitest';
+import { layStarterLine } from '../src/app/scenarios';
 import { BUILDINGS } from '../src/data/buildings';
 import { ITEMS } from '../src/data/items';
+import { LAYERS } from '../src/data/layers';
 import { MILESTONES, PROJECTS } from '../src/data/progression';
 import { elevatorRate } from '../src/sim/elevator';
 import { Game } from '../src/sim/game';
 import { insert } from '../src/sim/logistics';
-import { completeProject } from '../src/sim/progress';
+import { completeProject, currentStep, guideMarks, stepProgress } from '../src/sim/progress';
 import { deserialize, serialize } from '../src/sim/save';
+import type { Building, Dir } from '../src/sim/types';
 import { run, sandbox } from './helpers';
 
-describe('starter line', () => {
-  it('sells iron within 20 seconds and stocks the HQ with plates', () => {
-    const g = Game.create(1);
-    const plates = g.layer(0).stock.iron_plate ?? 0;
-    run(g, 20);
-    expect(g.s.stats.sold.iron_ingot ?? 0).toBeGreaterThan(0);
-    const before = g.s.stats.sold.iron_ingot;
-    run(g, 60);
-    // 30 ore/min -> 15 ingots/min, split between the terminal and the press.
-    const sold = g.s.stats.sold.iron_ingot - before;
-    expect(sold).toBeGreaterThanOrEqual(6);
-    expect(sold).toBeLessThanOrEqual(9);
-    expect((g.layer(0).stock.iron_plate ?? 0) - plates).toBeGreaterThanOrEqual(5);
+describe('a new game: the player builds the first line', () => {
+  /** Place a building the way the player does (paid from the HQ, never a ghost here). */
+  function put(g: Game, type: string, x: number, y: number, dir: Dir): Building {
+    const b = g.place(type, 0, x, y, dir);
+    expect(b?.planned, `${type} at ${x},${y}`).toBe(false);
+    return b!;
+  }
+
+  it('opens with the HQ, the Shipping Terminal and the broken Drill, and a crate holding what the old ready-made line cost', () => {
+    const g = Game.create(20261030);
+    expect([...g.s.buildings.values()].map((b) => b.type).sort()).toEqual(['drill', 'hq', 'terminal']);
+    // The line that used to come built: a Miner, a Smelter, a Press, a Splitter and 14 belts.
+    const line: Record<string, number> = { miner: 1, smelter: 1, press: 1, splitter: 1, belt: 14 };
+    const cost: Record<string, number> = {};
+    for (const [type, n] of Object.entries(line)) for (const [k, v] of Object.entries(BUILDINGS[type].cost)) cost[k] = (cost[k] ?? 0) + v * n;
+    expect(cost).toEqual({ iron_plate: 40, gear: 11 });
+    expect(LAYERS[0].starterCrate).toEqual({ iron_plate: 100 + cost.iron_plate, gear: 30 + cost.gear, copper_wire: 20, brick: 30 });
+    expect(g.layer(0).stock).toEqual(LAYERS[0].starterCrate);
+    // Nothing runs until the player builds it.
+    run(g, 30);
+    expect(g.s.stats.sold).toEqual({});
+    expect(g.s.stats.produced).toEqual({});
+    expect(g.s.msDone).toEqual([]);
+    expect(MILESTONES[0].name).toBe('First Light');
   });
 
-  it('is already running when the game opens: the first sale lands within 3 seconds', () => {
+  it('the tutorial line, built with player actions at real cost, makes the first sale and completes First Light, then Plates for the HQ', () => {
     const g = Game.create(20261030);
+    const L = g.layer(0);
+    const ms = MILESTONES[0];
+    const done = () => ms.steps.map((st) => stepProgress(g, st).done);
+    // First Light, step by step: a Miner on the iron, a Smelter, belts into it, belts on into the Terminal.
+    put(g, 'miner', 16, 24, 1);
+    expect(g.at(0, 16, 24)?.ore).toBe('iron_ore');
+    expect(done()).toEqual([true, false, false, false]);
+    put(g, 'smelter', 22, 24, 1);
+    for (let x = 18; x <= 21; x++) put(g, 'belt', x, 25, 1);
+    for (let x = 24; x <= 31; x++) put(g, 'belt', x, 25, 1);
+    // 8 + 10 plates and 4 + 2 gears for the machines, a plate a belt.
+    expect(L.stock.iron_plate).toBe(140 - 8 - 10 - 12);
+    expect(L.stock.gear).toBe(41 - 4 - 2);
+    let first = -1;
+    for (let i = 0; i < 120 * 60 && !g.s.msDone.includes(1); i++) {
+      g.tick();
+      if (first < 0 && (g.s.stats.sold.iron_ingot ?? 0) > 0) first = g.s.time;
+    }
+    expect(first, 'first sale').toBeGreaterThan(0);
+    expect(first).toBeLessThan(20);
+    expect(g.s.msDone).toEqual([1]);
+    expect(g.s.stats.sold.iron_ingot).toBeGreaterThanOrEqual(5);
+    expect(MILESTONES[g.s.milestone].name).toBe('Plates for the HQ');
+    // Plates for the HQ: a Press under the HQ, fed by a Splitter swapped into the lane, belts up into the HQ.
+    put(g, 'press', 25, 22, 0);
+    put(g, 'belt', 25, 24, 0);
+    put(g, 'belt', 26, 21, 0);
+    put(g, 'belt', 26, 20, 0);
+    expect(g.at(0, 25, 25)?.type).toBe('belt');
+    put(g, 'splitter', 25, 25, 1);
+    const plates = (MILESTONES[1].steps[1] as { count: number }).count;
+    for (let i = 0; i < 120 * 60 && (g.s.stats.delivered.iron_plate ?? 0) < plates; i++) g.tick();
+    expect(g.s.stats.delivered.iron_plate).toBeGreaterThanOrEqual(plates);
+    // Sales go on through the Splitter's front.
+    const sold = g.s.stats.sold.iron_ingot ?? 0;
+    run(g, 20);
+    expect(g.s.stats.sold.iron_ingot ?? 0).toBeGreaterThan(sold);
+    // Its last step is a look at the Drill (the app sets the event when it is clicked).
+    expect(g.s.msDone).toEqual([1]);
+    expect(currentStep(g)).toMatchObject({ kind: 'event', event: 'drill_inspected', label: 'Click the Drill' });
+    g.s.stats.events.drill_inspected = 1;
+    run(g, 1);
+    expect(g.s.msDone).toEqual([1, 2]);
+    expect(MILESTONES[g.s.milestone].name).toBe('Copper Line');
+    // The Copper Line points at the copper deposit; nothing is placed for the player.
+    expect([...g.s.buildings.values()].some((b) => b.ore === 'copper_ore')).toBe(false);
+    expect(guideMarks(g, 0)).toEqual([expect.objectContaining({ x: expect.any(Number) })]);
+    const [mark] = guideMarks(g, 0);
+    for (let y = mark.y; y < mark.y + mark.h; y++) for (let x = mark.x; x < mark.x + mark.w; x++) if (L.ore[y * L.w + x]) expect(g.oreName(L.ore[y * L.w + x])).toBe('copper_ore');
+  });
+
+  it('layStarterLine lays the line a new game used to open with, running: the first sale within 3 seconds, plates into the HQ', () => {
+    const g = Game.create(20261030);
+    layStarterLine(g);
     // Ore on the belts into the smelter, ingots in its buffer and on every other belt after it.
     const item = (x: number, y: number) => g.at(0, x, y)?.item?.id;
     expect([18, 19, 20, 21].map((x) => item(x, 25))).toEqual(['iron_ore', 'iron_ore', 'iron_ore', 'iron_ore']);
     expect([24, 26, 28, 30].map((x) => item(x, 25))).toEqual(['iron_ingot', 'iron_ingot', 'iron_ingot', 'iron_ingot']);
     expect(item(25, 24)).toBe('iron_ingot');
     expect(g.at(0, 22, 24)?.outBuf.map((i) => i.id)).toEqual(['iron_ingot', 'iron_ingot']);
+    // Paid from the crate: the HQ holds what a new game used to open with.
+    expect(g.layer(0).stock).toEqual({ iron_plate: 100, gear: 30, copper_wire: 20, brick: 30 });
     let first = -1;
     for (let i = 0; i < 3 * 60 && first < 0; i++) {
       g.tick();
@@ -39,27 +109,16 @@ describe('starter line', () => {
     }
     expect(first).toBeGreaterThan(0);
     expect(first).toBeLessThanOrEqual(3);
-    // The first objective reads in full.
-    expect(MILESTONES[0].steps[1]).toMatchObject({ kind: 'event', event: 'drill_inspected', label: 'Click the Drill' });
-  });
-
-  it('completes milestone 1 after the first sale and a look at the drill', () => {
-    const g = Game.create(1);
-    run(g, 25);
-    expect(g.s.msDone).not.toContain(1);
-    g.s.stats.events.drill_inspected = 1;
-    run(g, 1);
-    expect(g.s.msDone).toContain(1);
-  });
-
-  it('milestone 2 marks a Miner on the copper deposit', () => {
-    const g = Game.create(1);
-    run(g, 25);
-    g.s.stats.events.drill_inspected = 1;
-    run(g, 2);
-    const m = g.at(0, 43, 20);
-    expect(m?.type).toBe('miner');
-    expect(m?.ore).toBe('copper_ore');
+    // Once what it started with has drained (20 s in): 30 ore/min -> 15 ingots/min, split between the
+    // terminal and the press.
+    run(g, 20 - g.s.time);
+    const plates = g.layer(0).stock.iron_plate ?? 0;
+    const before = g.s.stats.sold.iron_ingot;
+    run(g, 60);
+    const sold = g.s.stats.sold.iron_ingot - before;
+    expect(sold).toBeGreaterThanOrEqual(6);
+    expect(sold).toBeLessThanOrEqual(9);
+    expect((g.layer(0).stock.iron_plate ?? 0) - plates).toBeGreaterThanOrEqual(5);
   });
 });
 
@@ -378,6 +437,7 @@ describe('layers and elevators', () => {
 describe('save', () => {
   it('round-trips and keeps running identically', () => {
     const g = Game.create(7);
+    layStarterLine(g);
     run(g, 10);
     g.layer(0).requests = { gear: 5 };
     const json = serialize(g);

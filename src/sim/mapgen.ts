@@ -30,7 +30,25 @@ export const SURFACE = {
   hq: { x: 26, y: 17 },
   terminal: { x: 32, y: 24 },
   drill: { x: 30, y: 9 },
+  /**
+   * The ridge of rock between the copper deposit and the Shipping Terminal ('#' is rock), the same on
+   * every seed: the Copper Line's dig step teaches the Dig tool on it. It stands across every straight
+   * way from the copper to the Terminal, rows 19 to 27, so digging through it is the short way; going
+   * round it is a long detour. A lane west through it digs 3 tiles, 2 at its ends. (38, 26) stays
+   * open: it holds a prop on the default seed, and the props must not move (review-3 A1).
+   */
+  outcrop: { x: 36, y: 19, rows: ['.##', '###', '###', '###', '###', '###', '###', '##.', '##.'] },
 };
+
+/** The Surface ridge's rock cells (SURFACE.outcrop), row by row. */
+export function outcropCells(): { x: number; y: number }[] {
+  const o = SURFACE.outcrop;
+  const out: { x: number; y: number }[] = [];
+  o.rows.forEach((row, dy) => {
+    for (let dx = 0; dx < row.length; dx++) if (row[dx] === '#') out.push({ x: o.x + dx, y: o.y + dy });
+  });
+  return out;
+}
 
 interface Rect {
   x0: number;
@@ -172,6 +190,8 @@ function generateSurface(L: LayerState, def: LayerDef, c: Carver, rand: () => nu
     c.ellipse(cx, cy, rx, ry, 0.8, T_ROCK);
     placed++;
   }
+  // The designed ridge, inside the kept-clear layout, so no boulder ever joins it.
+  for (const p of outcropCells()) c.set(p.x, p.y, T_ROCK);
 }
 
 function generateUnderground(L: LayerState, def: LayerDef, c: Carver, rand: () => number, s: number): void {

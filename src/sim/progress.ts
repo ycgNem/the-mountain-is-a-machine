@@ -3,12 +3,13 @@
 import { BUILDINGS } from '../data/buildings';
 import { ITEMS, itemShort } from '../data/items';
 import { CONDUIT_KW_PER_NODE, ENGINE_NODES, HEART, LAYERS, WAKE_RADIUS, WAKE_RING_STEP, WAKE_RINGS } from '../data/layers';
-import { ASSAYS, CONTRACT_MUL_CAP, CONTRACT_REROLL, CONTRACTS, MILESTONES, PROJECTS, type Locate, type StepDef } from '../data/progression';
+import { ASSAYS, CONTRACT_MUL_CAP, CONTRACT_REROLL, CONTRACTS, MILESTONES, PROJECTS, type Locate, type MarkDef, type StepDef } from '../data/progression';
 import { createShaft } from './elevator';
 import type { Game } from './game';
 import { GEN_FUEL_CAP, isSlot, outputPort } from './logistics';
+import { SURFACE, oreIndex, outcropCells } from './mapgen';
 import { nextRand } from './rng';
-import { DX, DY, cloneStats, leftOf, rightOf, type Building, type Contract, type Dir, type Item } from './types';
+import { DX, DY, T_ROCK, cloneStats, leftOf, rightOf, type Building, type Contract, type Dir, type Item } from './types';
 
 // ------------------------------------------------------------------ shipping
 
@@ -480,8 +481,6 @@ export function startMilestone(g: Game, index: number, silent = false): void {
   if (m) g.emit({ t: 'message', who: 'mags', text: m.intro });
   const where = m?.locate ? locateLine(g, m.locate) : null;
   if (where) g.emit({ t: 'message', who: 'mags', text: where });
-  // Copper Line: Mags marks a Miner on the copper deposit; it builds itself from HQ stock.
-  if (m?.n === 2) g.place('miner', 0, 43, 20, 2);
   void silent;
 }
 
@@ -505,14 +504,16 @@ export function stepLabel(st: StepDef): string {
     case 'produce':
       return st.label ?? `Make ${itemShort(st.item)}`;
     case 'deliver':
-      return `Deliver ${itemShort(st.item)}`;
+      return st.label ?? `Deliver ${itemShort(st.item)}`;
     case 'build': {
       if (st.label) return st.label;
       const name = BUILDINGS[st.building].name;
       return st.count > 1 ? `Build ${name}s` : `Build ${/^[AEIOU]/.test(name) ? 'an' : 'a'} ${name}`;
     }
     case 'dig':
-      return 'Excavate rock';
+      return st.label ?? 'Excavate rock';
+    case 'reach':
+      return st.label;
     case 'elevator':
       return 'Move items by elevator';
     case 'assay':
@@ -558,7 +559,11 @@ export function stepProgress(g: Game, st: StepDef): StepProgress {
       return { cur, max: st.count, done: cur >= st.count, label };
     }
     case 'dig': {
-      const cur = s.stats.dug - base.dug;
+      // Tiles dug since the milestone began. The Copper Line's step, marked on the Surface ridge, also
+      // counts the ridge already open: dug before the step came up, or never there on a map from before
+      // the ridge (save.ts), so nobody is sent to dig rock that isn't there.
+      let cur = s.stats.dug - base.dug;
+      if (st.mark?.kind === 'outcrop') cur = Math.max(cur, ridgeOpen(g));
       return { cur, max: st.count, done: cur >= st.count, label };
     }
     case 'elevator': {
@@ -586,7 +591,136 @@ export function stepProgress(g: Game, st: StepDef): StepProgress {
       const done = s.visited.includes(st.layer);
       return { cur: done ? 1 : 0, max: 1, done, label };
     }
+    case 'reach': {
+      const d = nearestDeposit(st.layer, st.ore);
+      const L = g.layer(st.layer);
+      const done = !!d && !!L?.open && !!L.revealed[d.y * L.w + d.x];
+      return { cur: done ? 1 : 0, max: 1, done, label };
+    }
   }
+}
+
+// ------------------------------------------------------------------ the tutorial's hints and guide marks
+
+/** A rectangle of tiles: top-left corner and size. */
+export interface TileRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** The step the hint and the guide marks follow: the open milestone's first unfinished one (none after the ending). */
+export function currentStep(g: Game): StepDef | undefined {
+  const m = MILESTONES[g.s.milestone];
+  if (!m || g.s.ended) return undefined;
+  return m.steps.find((st) => !stepProgress(g, st).done);
+}
+
+/**
+ * The objectives panel's hint: the first unfinished step's own hint (the UI path and the control for
+ * what to do next), else the milestone's.
+ */
+export function currentHint(g: Game): string | undefined {
+  const m = MILESTONES[g.s.milestone];
+  if (!m || g.s.ended) return undefined;
+  return currentStep(g)?.hint ?? m.hint;
+}
+
+/**
+ * What the current step points at on one layer, as tile rects for the renderer to outline: the
+ * deposit to mine or dig to, the building to belt into or click, the rock to dig. Read from the map
+ * as generated, so it follows whatever a seed did to a deposit's edge. Empty when the step points at
+ * nothing, or at something on another layer.
+ */
+export function guideMarks(g: Game, layer: number): TileRect[] {
+  const mark = currentStep(g)?.mark;
+  if (!mark || markLayer(mark) !== layer || !g.layer(layer)?.open) return [];
+  const r = markRect(g, mark);
+  return r ? [r] : [];
+}
+
+function markLayer(mark: MarkDef): number {
+  return mark.kind === 'outcrop' ? 0 : mark.layer;
+}
+
+function markRect(g: Game, mark: MarkDef): TileRect | null {
+  switch (mark.kind) {
+    case 'deposit':
+      return depositRect(g, mark.layer, mark.ore);
+    case 'building': {
+      // Asked every frame: walk the buildings rather than copy them all into an array.
+      for (const b of g.s.buildings.values()) {
+        if (b.layer !== mark.layer || b.type !== mark.building) continue;
+        const size = BUILDINGS[b.type].size;
+        return { x: b.x, y: b.y, w: size, h: size };
+      }
+      return null;
+    }
+    case 'outcrop': {
+      // The rock left standing: the mark shrinks as it is dug and goes once it is all floor.
+      const L = g.layer(0);
+      return cellsRect(outcropCells().filter((c) => L.terrain[c.y * L.w + c.x] === T_ROCK));
+    }
+    case 'bore': {
+      const b = LAYERS[mark.layer].boreSite;
+      return b ? { x: b.x - 2, y: b.y - 2, w: 5, h: 5 } : null;
+    }
+  }
+}
+
+/** How many of the Surface ridge's tiles are open floor now: dug, or on an older map never rock. */
+function ridgeOpen(g: Game): number {
+  const L = g.layer(0);
+  let n = 0;
+  for (const c of outcropCells()) if (L.terrain[c.y * L.w + c.x] !== T_ROCK) n++;
+  return n;
+}
+
+/** The smallest rect holding every cell, or null for none. */
+function cellsRect(cells: { x: number; y: number }[]): TileRect | null {
+  if (!cells.length) return null;
+  const xs = cells.map((c) => c.x);
+  const ys = cells.map((c) => c.y);
+  const x = Math.min(...xs);
+  const y = Math.min(...ys);
+  return { x, y, w: Math.max(...xs) - x + 1, h: Math.max(...ys) - y + 1 };
+}
+
+/**
+ * A layer's deposit of an ore nearest where the player starts on it: the HQ on the Surface, the
+ * shaft's arrival below. The designed deposits (data/layers.ts) are the same on every seed; only their
+ * edges vary, so their ore cells are read from the map (depositRect).
+ */
+export function nearestDeposit(layer: number, ore: string): { x: number; y: number; r: number } | null {
+  const def = LAYERS[layer];
+  const from = def.arrival ?? { x: SURFACE.hq.x + 1, y: SURFACE.hq.y + 1 };
+  let best: { x: number; y: number; r: number } | null = null;
+  let bd = Infinity;
+  for (const d of def.deposits) {
+    if (d.ore !== ore) continue;
+    const dist = Math.hypot(d.x - from.x, d.y - from.y);
+    if (dist < bd) {
+      bd = dist;
+      best = d;
+    }
+  }
+  return best;
+}
+
+/** The tiles of the nearest deposit of an ore on a layer (nearestDeposit) that really hold it. */
+function depositRect(g: Game, layer: number, ore: string): TileRect | null {
+  const d = nearestDeposit(layer, ore);
+  if (!d) return null;
+  const L = g.layer(layer);
+  const idx = oreIndex(ore);
+  const cells: { x: number; y: number }[] = [];
+  for (let y = d.y - d.r - 1; y <= d.y + d.r + 1; y++) {
+    for (let x = d.x - d.r - 1; x <= d.x + d.r + 1; x++) {
+      if (x >= 0 && y >= 0 && x < L.w && y < L.h && L.ore[y * L.w + x] === idx) cells.push({ x, y });
+    }
+  }
+  return cellsRect(cells);
 }
 
 export function checkMilestones(g: Game): void {

@@ -231,9 +231,9 @@ describe('K7: a drag that starts on a working line', () => {
 });
 
 describe('K8: Act I hints', () => {
-  it('M3 says to keep some plates going into the HQ; M5 that machines only take parts from belts', () => {
-    expect(MILESTONES.find((m) => m.n === 3)!.hint).toBe('Everything you build is paid from the HQ: keep some plates flowing into it.');
-    expect(MILESTONES.find((m) => m.n === 5)!.hint).toBe('Machines only take parts from belts, never from the HQ: give the Assembler its own plate line and turn the brick line into it.');
+  it('M4 says to keep some plates going into the HQ; M6 that machines only take parts from belts', () => {
+    expect(MILESTONES.find((m) => m.n === 4)!.hint).toBe('Everything you build is paid from the HQ: keep some plates flowing into it.');
+    expect(MILESTONES.find((m) => m.n === 6)!.hint).toBe('Machines only take parts from belts, never from the HQ: give the Assembler its own plate line and turn the brick line into it.');
   });
 });
 
@@ -270,7 +270,8 @@ describe('K9 and Q10: message texts', () => {
 describe('K11: Act I money', () => {
   it("Act I's milestone cash is halved ($725 in all); Act II's stays; contracts stay on the Surface's board", () => {
     const cash = (act: number) => MILESTONES.filter((m) => m.act === act).map((m) => m.reward.money ?? 0);
-    expect(cash(1)).toEqual([50, 75, 75, 125, 150, 250]);
+    // First Light's $50 is split with Plates for the HQ, the tutorial's second milestone.
+    expect(cash(1)).toEqual([25, 25, 75, 75, 125, 150, 250]);
     expect(cash(1).reduce((a, b) => a + b, 0)).toBe(725);
     expect(cash(2)).toEqual([200, 300, 400, 500, 800]);
     const g = Game.create(20261030);
@@ -283,9 +284,9 @@ describe('K11: Act I money', () => {
 describe('K13: the radio at a breakthrough', () => {
   it("Mags's introduction to the new layer comes first, then the drill-lines line, then the Board's memo", () => {
     const g = Game.create(20261030);
-    const m6 = MILESTONES.findIndex((m) => m.n === 6);
-    for (const m of MILESTONES.slice(0, m6)) g.s.msDone.push(m.n);
-    startMilestone(g, m6);
+    const m7 = MILESTONES.findIndex((m) => m.n === 7);
+    for (const m of MILESTONES.slice(0, m7)) g.s.msDone.push(m.n);
+    startMilestone(g, m7);
     const drill = find(g, 0, 'drill');
     expect(g.place('belt', 0, drill.x + 2, drill.y + 5, 0)?.planned).toBe(false);
     const p = g.s.project!;
@@ -294,20 +295,20 @@ describe('K13: the radio at a breakthrough', () => {
     g.events.length = 0;
     expect(insert(g, drill, { id: 'gear', heat: 0 }, 0)).toBe(true);
     // Repair the Drill lands at once, and Down the Shaft starts, before anything else goes on the radio.
-    expect(g.s.msDone).toContain(6);
-    expect(MILESTONES[g.s.milestone].n).toBe(7);
+    expect(g.s.msDone).toContain(7);
+    expect(MILESTONES[g.s.milestone].n).toBe(8);
     expect(messages(g)).toEqual([
-      MILESTONES[m6 + 1].intro,
+      MILESTONES[m7 + 1].intro,
       drillLinesLine(0),
       'Memo from the Board: breakthrough to the Shallows noted. Production targets will be revised upward.',
     ]);
     const kinds = g.events.map((e) => e.t);
     expect(kinds.indexOf('breakthrough')).toBeLessThan(kinds.indexOf('milestone'));
     expect(kinds.indexOf('milestone')).toBeLessThan(kinds.indexOf('message'));
-    // M6's reward is paid once.
+    // M7's reward is paid once.
     const money = g.s.money;
     run(g, 1);
-    expect(g.s.msDone.filter((n) => n === 6)).toEqual([6]);
+    expect(g.s.msDone.filter((n) => n === 7)).toEqual([7]);
     expect(g.s.money).toBeGreaterThanOrEqual(money);
   });
 });

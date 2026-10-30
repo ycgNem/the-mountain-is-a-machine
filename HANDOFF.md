@@ -4,6 +4,11 @@ Read this first. Status, how to run, the code map and what's next.
 
 ## Status
 
+- **2026-10-30, session 2 (owner feedback):** a build-it-yourself tutorial (nothing pre-built, a
+  hint and a map marker per step, digging taught in Act I and the Shallows, a new milestone 2
+  "Plates for the HQ", saves at version 4 migrate), right-click only cancels (hold to remove,
+  Ctrl+Z undoes), belt ghosts with arrows, seamless belts and pieces, a new font and UI kit, rates
+  with units everywhere. DECISIONS #121–#125. 271 tests in 21 files pass.
 - **2026-10-30, session 1 (autonomous run):** docs, project agents, the full simulation for all six
   layers, rendering, UI, audio, scenarios, tests and the itch.io release zip are written.
   - Plan review 1 (`DECISIONS.md` #21–#63) and review 2 (#64–#89: the indie critic's C1–C13, the
@@ -112,7 +117,8 @@ src/
                        fungal pools, magma, heatGrade() (hot 2 / warm 1), exact 2x2 vents, conduits,
                        decor (each name its decorWeights share by a ranking hash, no two TALL_DECOR
                        props within 2 tiles); revealComponent()
-    game.ts            Game: create() with the starter line already running and the HQ floor,
+    game.ts            Game: create() with only the HQ, Terminal and Drill (the player builds the first line,
+                       DECISIONS #121) and the HQ floor,
                        canPlace (hot, steady ground, awake conduit, paid swaps, a stock override for
                        previews), place, planDrag and placeDrag (crossings first, a Crossing at a
                        drag's start on a straight run of a line, fedFromBehind; refusals
@@ -327,7 +333,7 @@ work; the rest test the game directly.
 | File | What it covers |
 |---|---|
 | `helpers.ts` | `run()`, `sandbox()` (an open Surface with full stock) and `paint()` |
-| `sim.test.ts` | the starter line (first sale within 3 s), belts, building (rush, swaps, kept items, fair ghosts, drag crossings, Jammed, Build next, Mags' warnings, the Chute), machines, D1 and elevators, save round-trip |
+| `sim.test.ts` | the tutorial start (nothing pre-built), belts, building (rush, swaps, kept items, fair ghosts, drag crossings, Jammed, Build next, Mags' warnings, the Chute), machines, D1 and elevators, save round-trip |
 | `layers.test.ts` | spores, interference and shield walls, taps, overcharged crystal, heat and steady ground, molten ingots, engine nodes, conduit rings, the 60 kW pool against 30 kW Attuners, power rules (the crew's coal rig waits on its full generator as Idle), data checks |
 | `maps.test.ts` | three seeds: full-coverage Miner spots, depots and their requests, bore sites, washer water, forge ground, exact vents, the amber ring, the Shallows start pocket, conduits, nodes and the Heart |
 | `pacing.test.ts` | every drill project against PLAN §8 from the recipe data; D1 and D2 as tutorials; the chorus routes |

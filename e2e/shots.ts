@@ -55,6 +55,12 @@ const SHOTS: Shot[] = [
   { name: 'company', query: 'scenario=surface', setup: `__app.win='company';` },
   { name: 'help', query: 'scenario=surface', setup: `__app.win='help';` },
   { name: 'surface_ghost', query: 'scenario=surface', setup: `const g=__app.game; g.layer(0).stock.gear=0; const b=g.place('press',0,36,28,1); __app.selected=b.id; __app.cams[0]={x:37*16,y:29*16};` },
+  // Placing belts must show which way they run: one Conveyor ghost facing south at zoom 4, then a
+  // drag that turns (east, then south), the way the release will lay it.
+  { name: 'surface_belt_ghost', query: 'scenario=surface&zoom=4', setup: `__app.selectBuild('belt'); __app.category='logistics'; __app.dir=2; __app.cams[0]={x:34*16,y:36*16};`, mouse: { x: 34, y: 36 } },
+  { name: 'surface_belt_drag', query: 'scenario=surface&zoom=4', setup: `__app.selectBuild('belt'); __app.category='logistics'; __app.cams[0]={x:34*16,y:36*16}; __app.dragStart={x:31,y:34,button:0};`, mouse: { x: 36, y: 38 } },
+  // Holding the right button on a building removes it after half a second: the sweep 60% of the way.
+  { name: 'surface_remove_hold', query: 'scenario=surface&zoom=4', setup: `const g=__app.game; const b=[...g.s.buildings.values()].find(b=>b.type==='smelter'&&b.layer===0); __app.rightHold={id:b.id,t:0.3}; __app.cams[0]={x:b.x*16+16,y:b.y*16+16};` },
   { name: 'shallows', query: 'scenario=shallows' },
   { name: 'shallows_zoom2', query: 'scenario=shallows&zoom=2' },
   { name: 'shallows_depot', query: 'scenario=shallows', setup: `const g=__app.game; const b=[...g.s.buildings.values()].find(b=>b.type==='depot'&&b.layer===1); __app.selected=b.id;` },

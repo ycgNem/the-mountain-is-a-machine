@@ -1,15 +1,17 @@
-// Act I as a reusable script: a scripted player builds the Surface from the first sale to D1 on the
-// real map. tests/act1.test.ts prints and checks it; start.ts's startFromActI() hands its end state
-// to Act II.
+// Act I as a reusable script: a scripted player builds the Surface from an empty new game to D1 on
+// the real map, the first line the way the tutorial's steps ask for it. tests/act1.test.ts prints and
+// checks it; start.ts's startFromActI() hands its end state to Act II.
 //
 // The layout (x, y are top-left corners; machines push out of one port: a 2x2 from its front-right
 // tile, so a Press facing N at (32,14) pushes into (33,13)):
-//   starter   Miner (16,24) E -> Smelter (22,24) E -> Splitter (25,25): ahead to the Terminal,
-//             left up into the HQ Press P1 (25,22) N -> HQ. A second Miner (17,26) and Smelter
-//             (19,26) side-load the lane at (24,25), doubling it.
-//   copper    Mags's Miner (43,20) S -> Smelter CS (42,22) W -> Splitter CSP (41,22) W: left down
-//             and west along y=24 into the Terminal, right into the wire Press WP (40,20) W ->
-//             west along y=20, north up x=34 into the Drill.
+//   starter   (M1) Miner I1 (16,24) E -> belts (18..21, 25) -> Smelter S1 (22,24) E -> east along
+//             y=25 into the Terminal. (M2) a Splitter swapped in at (25,25): ahead to the Terminal,
+//             left up into the HQ Press P1 (25,22) N -> (26,21), (26,20) N into the HQ. A second
+//             Miner (17,26) and Smelter (19,26) side-load the lane at (24,25), doubling it.
+//   copper    (M3) two ways dug through the ridge (36..38, 19..27), at y=24 and y=20; Miner CM
+//             (43,20) S -> Smelter CS (42,22) W -> Splitter CSP (41,22) W: left down and west along
+//             y=24 through the gap into the Terminal, right into the wire Press WP (40,20) W -> west
+//             along y=20 through the other gap, north up x=34 into the Drill.
 //   bricks    stone Miner (28,37) N -> Smelter BS (28,35) N -> north up x=29, a Crossing over the
 //             starter lane at (29,25), into the HQ at (29,17) until the Assembler is built.
 //   east iron Miners (46,32), (48,33) N -> Smelters (46,30), (48,31) N -> up x=49, west along
@@ -19,10 +21,13 @@
 //
 // After D1 the Drill is gone and the Surface's top station stands in its place (31..33, 10..12):
 // the wire line (34,14), PD (33,13) and AS (31,13) then point at empty floor until Act II re-routes
-// them. Named buildings: P1, CM, CS, CSP, I2, S2, WP, X1, X2, BS, SM, PD, PA, SP1, SB1, SB2, IB1,
-// IB2, AS (bot.get(name)).
+// them. Named buildings: I1, S1, P1, CM, CS, CSP, I2, S2, WP, X1, X2, BS, SM, PD, PA, SP1, SB1, SB2,
+// IB1, IB2, AS (bot.get(name)).
 
+import { MILESTONES } from '../../src/data/progression';
 import { Game } from '../../src/sim/game';
+import { stepProgress } from '../../src/sim/progress';
+import { T_FLOOR } from '../../src/sim/types';
 import { Bot, E, N, S, W } from '../bot';
 
 export interface Style {
@@ -34,7 +39,7 @@ export interface Style {
    * later, which the game refuses while the HQ can't pay for them in full.
    */
   planAhead: boolean;
-  /** Build the brick line with the wire line (M3), not when Brickwork asks for it (M4). */
+  /** Build the brick line with the wire line (M4), not when Brickwork asks for it (M5). */
   brickFirst: boolean;
   /** Switch the HQ press to gears whenever the ghosts are short of gears. */
   gearKeeper: boolean;
@@ -44,7 +49,7 @@ export const EFFICIENT: Style = { doubleStarter: true, planAhead: true, brickFir
 export const STARTER_ONLY: Style = { ...EFFICIENT, doubleStarter: false };
 export const CARELESS: Style = { doubleStarter: true, planAhead: false, brickFirst: false, gearKeeper: false };
 
-/** PLAN.md §8: Act I (Surface, D1 done) takes 15-25 minutes; the first sale comes inside 20 s. */
+/** PLAN.md §8: Act I (Surface, D1 done) takes 15-25 minutes. */
 export const ACT1_BAND = { from: 15 * 60, to: 25 * 60 };
 
 /** The seed every new game uses. */
@@ -53,26 +58,40 @@ export const SEED = 20261030;
 /** The Act I build order, as phases keyed to milestones, plus watchers that tweak recipes. All on layer 0. */
 export function actOne(bot: Bot, style: Style): void {
   const has = (n: number) => (b: Bot) => b.g.s.msDone.includes(n);
+  /** Milestone n is open and its step i is done, as its objectives panel shows it. */
+  const stepDone = (n: number, i: number) => (b: Bot) => {
+    const m = MILESTONES[b.g.s.milestone];
+    return m?.n === n && stepProgress(b.g, m.steps[i]).done;
+  };
   const L0 = { layer: 0 };
-  bot.adopt('P1', 25, 22, 'press', 0);
 
-  // M1 First Light: the line sells by itself; Mags asks the player to click the Drill.
-  bot.phases.push({ name: 'look at the Drill (M1)', when: (b) => b.t >= 5, act: (b) => b.inspectDrill() });
-
-  // M2 Copper Line: Mags marks a Miner on the copper; a smelter right under it, a splitter (later
-  // the wire press's feed) and a belt west along y=24 into the Terminal.
+  // M1 First Light: nothing runs yet. The iron line, paid from the HQ's crate, as the tutorial asks
+  // for it: a Miner on the iron, a Smelter, belts into it, and belts on into the Terminal.
   bot.phases.push({
-    name: 'copper smelter under Mags\'s Miner, into the terminal (M2)',
-    when: has(1),
+    name: 'iron Miner, Smelter and belts into the Terminal (M1)',
+    when: () => true,
     act: (b) => {
-      b.adopt('CM', 43, 20, 'miner', 0);
-      b.put('smelter', 42, 22, W, { recipe: 'copper_ingot', name: 'CS', ...L0 });
-      if (style.planAhead) b.put('splitter', 41, 22, W, { name: 'CSP', ...L0 });
-      else b.put('belt', 41, 22, S, L0);
-      b.put('belt', 41, 23, S, L0);
-      b.run(41, 24, 35, 24, W, 0);
+      b.put('miner', 16, 24, E, { name: 'I1', ...L0 });
+      b.put('smelter', 22, 24, E, { recipe: 'iron_ingot', name: 'S1', ...L0 });
+      b.run(18, 25, 21, 25, E, 0);
+      b.run(24, 25, 31, 25, E, 0);
     },
   });
+
+  // M2 Plates for the HQ: a Press under the HQ, fed by a Splitter swapped into the lane (ahead to the
+  // Terminal, left up into the Press), its plates up into the HQ. Then the tutorial's last step, a
+  // look at the Drill.
+  bot.phases.push({
+    name: 'Splitter in the lane, the HQ Press P1 and its belts (M2)',
+    when: has(1),
+    act: (b) => {
+      b.put('press', 25, 22, N, { recipe: 'iron_plate', name: 'P1', ...L0 });
+      b.run(26, 21, 26, 20, N, 0);
+      b.put('belt', 25, 24, N, L0);
+      b.swap('splitter', 25, 25, E, L0);
+    },
+  });
+  bot.phases.push({ name: 'look at the Drill (M2)', when: stepDone(2, 1), act: (b) => b.inspectDrill() });
 
   if (style.doubleStarter) {
     bot.phases.push({
@@ -87,12 +106,40 @@ export function actOne(bot: Bot, style: Style): void {
     });
   }
 
-  // M3 Wire and Gears: the copper splitter's right exit feeds a wire press whose wire runs into
+  // M3 Copper Line: a Miner on the copper with a Smelter right under it and a splitter (later the wire
+  // press's feed), and two ways dug through the ridge between them and the Terminal: the copper lane
+  // west along y=24 and, for M4, the wire lane along y=20.
+  bot.phases.push({
+    name: 'copper Miner and Smelter; dig two ways through the ridge (M3)',
+    when: has(2),
+    act: (b) => {
+      b.digRect(36, 24, 38, 24, 0);
+      b.digRect(36, 20, 38, 20, 0);
+      b.put('miner', 43, 20, S, { name: 'CM', ...L0 });
+      b.put('smelter', 42, 22, W, { recipe: 'copper_ingot', name: 'CS', ...L0 });
+      if (style.planAhead) b.put('splitter', 41, 22, W, { name: 'CSP', ...L0 });
+      else b.put('belt', 41, 22, S, L0);
+      b.put('belt', 41, 23, S, L0);
+    },
+  });
+  bot.phases.push({
+    name: 'copper lane west through the gap into the Terminal (M3)',
+    when: (b) => {
+      const L = b.g.layer(0);
+      return has(2)(b) && [36, 37, 38].every((x) => L.terrain[24 * L.w + x] === T_FLOOR);
+    },
+    act: (b) => b.run(41, 24, 35, 24, W, 0),
+  });
+
+  // M4 Wire and Gears: the copper splitter's right exit feeds a wire press whose wire runs into
   // the drill; the HQ press makes the 15 gears.
   let gearBase = -1;
   bot.phases.push({
-    name: 'wire press into the drill; P1 on gears (M3)',
-    when: has(2),
+    name: 'wire press into the drill; P1 on gears (M4)',
+    when: (b) => {
+      const L = b.g.layer(0);
+      return has(3)(b) && [36, 37, 38].every((x) => L.terrain[20 * L.w + x] === T_FLOOR);
+    },
     act: (b) => {
       // Drill end first so the line works the moment its last ghost is built.
       b.run(34, 14, 34, 16, N, 0);
@@ -106,14 +153,14 @@ export function actOne(bot: Bot, style: Style): void {
       gearBase = b.g.s.stats.produced.gear ?? 0;
     },
   });
-  let m3GearsDone = false;
+  let wireGearsDone = false;
   bot.watchers.push({
     name: 'P1 back to plates after 15 gears',
     check: (b) => {
       if (gearBase < 0 || (b.g.s.stats.produced.gear ?? 0) - gearBase < 15) return;
       b.recipe(b.get('P1'), 'iron_plate');
       b.note('P1 back to iron plates');
-      m3GearsDone = true;
+      wireGearsDone = true;
       return true;
     },
   });
@@ -122,7 +169,7 @@ export function actOne(bot: Bot, style: Style): void {
     bot.watchers.push({
       name: 'HQ gear keeper',
       check: (b) => {
-        if (!m3GearsDone) return;
+        if (!wireGearsDone) return;
         const p1 = b.get('P1');
         const short = b.ghostShortfall(0).gear ?? 0;
         if (!on && short > 0) {
@@ -145,8 +192,8 @@ export function actOne(bot: Bot, style: Style): void {
   // drag lays the crossing by itself, which this run checks.
   let dragAt = -1;
   bot.phases.push({
-    name: `stone -> brick -> HQ (${style.brickFirst ? 'early, with the wire line' : 'M4'})`,
-    when: has(style.brickFirst ? 2 : 3),
+    name: `stone -> brick -> HQ (${style.brickFirst ? 'early, with the wire line' : 'M5'})`,
+    when: has(style.brickFirst ? 3 : 4),
     act: (b) => {
       b.put('belt', 29, 17, W, L0);
       if (style.planAhead) {
@@ -195,7 +242,7 @@ export function actOne(bot: Bot, style: Style): void {
   // Brickwork to be done.
   bot.phases.push({
     name: 'east iron trunk and drill hub',
-    when: has(style.planAhead ? 2 : 4),
+    when: has(style.planAhead ? 3 : 5),
     act: (b) => {
       b.put('press', 32, 14, N, { recipe: 'iron_plate', name: 'PD', ...L0 });
       b.put('press', 30, 16, N, { recipe: 'iron_plate', name: 'PA', ...L0 });
@@ -213,11 +260,11 @@ export function actOne(bot: Bot, style: Style): void {
     },
   });
 
-  // M5 Reinforcement: the assembler on the drill's south face, fed plates straight from PA and
+  // M6 Reinforcement: the assembler on the drill's south face, fed plates straight from PA and
   // bricks by turning the brick line away from the HQ.
   bot.phases.push({
-    name: 'assembler on the drill, bricks turned to it (M5)',
-    when: has(4),
+    name: 'assembler on the drill, bricks turned to it (M6)',
+    when: has(5),
     act: (b) => {
       b.put('assembler', 30, 14, N, { recipe: 'reinforced_plate', name: 'AS', ...L0 });
       b.put('belt', 29, 15, E, L0);

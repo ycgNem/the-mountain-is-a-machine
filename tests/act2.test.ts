@@ -54,7 +54,7 @@ describe('Act II pacing bot', () => {
   // The bot plays with no reading or placing time, so it lands under the band's floor (Act I's bot
   // does too, DECISIONS #54); the ceiling is the bound that must hold, with a minute of slack. The
   // summary line says how far under the floor it is.
-  it('a competent player finishes Act II (M7-M11, D2) inside the cap, with no deadlock', () => {
+  it('a competent player finishes Act II (M8-M12, D2) inside the cap, with no deadlock', () => {
     const { bot, ms } = play();
     console.log([...summary(bot, ms), ...details(bot)].join('\n'));
 

@@ -5,18 +5,18 @@
 // What the bot leans on that the game never says goes to Bot.noteFriction.
 //
 // The plan, by milestone (coordinates are the seed's map):
-//   M12  a miner on the sapstone west of the depot feeds an Assay Lab; a survey of the way to the
+//   M13  a miner on the sapstone west of the depot feeds an Assay Lab; a survey of the way to the
 //        bore site's beacon, then the tunnel through the caverns it shows.
-//   M13  the lab comes up: the sapstone splits to two Separators; cobalt ore goes to a smelter, the
+//   M14  the lab comes up: the sapstone splits to two Separators; cobalt ore goes to a smelter, the
 //        resin (their side output) into the depot, which holds the surplus.
-//   M14  a fiber room dug out north of the depot: a harvester on the glowcap patch, two presses, a
+//   M15  a fiber room dug out north of the depot: a harvester on the glowcap patch, two presses, a
 //        filter assembler and an insulation assembler fed resin from the depot by an Unloader, and
 //        a Spore Filter over the sapstone line.
-//   M15  drill heads: Unloaders on the depot push Drill Bits (requested from the Shallows) and cobalt
+//   M16  drill heads: Unloaders on the depot push Drill Bits (requested from the Shallows) and cobalt
 //        ingots into an assembler; its heads go back into the depot.
-//   M16  a Spore Collector in the patch's thick spores and a harvester feed a biofuel assembler that
+//   M17  a Spore Collector in the patch's thick spores and a harvester feed a biofuel assembler that
 //        burns its fuel in a generator beside it.
-//   M17  the trunk: an Unloader on the depot, switched between the goods the Drill's panel still
+//   M18  the trunk: an Unloader on the depot, switched between the goods the Drill's panel still
 //        shows short, belts them through the tunnel to the Drill (extras that arrive after a good is
 //        full go on into the depot). Once the Drill's filters are covered, the filter assembler makes
 //        insulation too.
@@ -107,11 +107,11 @@ export function actThree(bot: Bot): void {
   };
   STATE.set(bot, st);
 
-  // M12 Something Growing: a miner on the sapstone feeds the lab its samples. The bore site's beacon
+  // M13 Something Growing: a miner on the sapstone feeds the lab its samples. The bore site's beacon
   // shows through the dark; a survey on the way there shows the caverns between, and the tunnel runs
   // through them (a cavern opens once the tunnel meets it straight on).
   bot.phases.push({
-    name: 'down to the Fungal Caverns: a lab on the sapstone; survey, then the tunnel to the beacon (M12)',
+    name: 'down to the Fungal Caverns: a lab on the sapstone; survey, then the tunnel to the beacon (M13)',
     when: () => true,
     act: (b) => {
       b.focus(L2);
@@ -123,12 +123,12 @@ export function actThree(bot: Bot): void {
     },
   });
 
-  // M13 Wash or Separate: the lab has done its job; SM1's sapstone splits to two separators. Their
+  // M14 Wash or Separate: the lab has done its job; SM1's sapstone splits to two separators. Their
   // cobalt ore goes to a smelter, their resin into the depot (it buffers the surplus). The assay
   // also shows the drill head's recipe (two cobalt ingots and a Drill Bit from the Shallows), so the
   // depot starts asking for bits.
   bot.phases.push({
-    name: 'take up the lab; SM1 -> splitter -> two separators, ore to a smelter, resin to the depot (M13)',
+    name: 'take up the lab; SM1 -> splitter -> two separators, ore to a smelter, resin to the depot (M14)',
     when: (b) => b.g.s.assaysDone.includes('sapstone'),
     act: (b) => {
       b.request('drill_bit', 40, L2);
@@ -153,9 +153,9 @@ export function actThree(bot: Bot): void {
 
   // The fiber room (after the dig): glowcap from the north patch, two presses, a filter assembler
   // and an insulation assembler fed resin from the depot; their goods ride the resin line into the
-  // depot. A spore filter over the sapstone line for Clean Air (M14).
+  // depot. A spore filter over the sapstone line for Clean Air (M15).
   bot.phases.push({
-    name: 'fiber room: harvester, presses, filter and insulation assemblers; resin from the depot (M14)',
+    name: 'fiber room: harvester, presses, filter and insulation assemblers; resin from the depot (M15)',
     when: (b) => b.g.recipeUnlocked('filter') && b.g.layer(L2).digQueue.length === 0,
     act: (b) => {
       b.put('harvester', 60, 27, W, { name: 'HVA', layer: L2 });
@@ -197,18 +197,18 @@ export function actThree(bot: Bot): void {
   // the patch's far side, where the spore collector will stand.
   bot.phases.push({
     name: 'second spore filter over the fiber room',
-    when: has(14),
+    when: has(15),
     act: (b) => {
       b.put('spore_filter', 55, 29, N, { name: 'SF2', layer: L2 });
       askForGhosts(b);
     },
   });
 
-  // M16 Spore Power: a collector in the thickest spores on the north patch and a harvester feed a
+  // M17 Spore Power: a collector in the thickest spores on the north patch and a harvester feed a
   // biofuel assembler, which burns its fuel in a generator next to it.
   bot.phases.push({
-    name: 'spore collector, harvester and biofuel assembler into a generator (M16)',
-    when: has(14),
+    name: 'spore collector, harvester and biofuel assembler into a generator (M17)',
+    when: has(15),
     act: (b) => {
       b.put('harvester', 62, 26, E, { name: 'HVC', layer: L2 });
       path(b, 64, 27, 'ES');

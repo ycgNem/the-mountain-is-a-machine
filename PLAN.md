@@ -169,7 +169,7 @@ form one machine.
   depot, plus its contents and the inputs of a craft in progress (a hot item comes back Cooled, an
   unstable one is lost). Pre-placed buildings (the starter line, each layer's rig) refund their full
   cost too.
-- **Q** copies the building under the cursor (type and facing). **X** or right-drag removes.
+- **Q** copies the building under the cursor (type and facing). **X** is the Remove tool; holding the right button on a building for half a second removes it; a right-click only cancels; Ctrl+Z undoes a removal (DECISIONS #122).
 - If you can't afford a building, you can still place it as a **planned** ghost (blue). Planned
   ghosts build automatically as the depot gets the goods: oldest first, and a newer ghost never
   takes an item an older waiting ghost still needs, so a run of cheap belts can't starve a machine;
@@ -607,7 +607,7 @@ hands its item on. No random disasters.
 
 | # | Act | Milestone | Steps (counts are deliveries anywhere unless stated; a "build" step counts finished buildings that already stand) | Reward |
 |---|---|---|---|---|
-| 1 | I Surface | First Light | Watch the starter line make a sale; click the Drill to see what it needs | $50 |
+| 1 | I Surface | First Light | Build a Miner on iron and a Smelter, belt ore into it, ship iron ingots (the player builds the first line; DECISIONS #121) | see progression.ts |
 | 2 | | Copper Line | Build a Miner on copper (Mags pre-places its planned ghost, which builds itself from HQ stock); ship 10 Copper Ingot | $75 |
 | 3 | | Wire and Gears | Produce 30 Copper Wire and 15 Gear | $75, Sorter license |
 | 4 | | Brickwork | Produce 20 Brick; upgrade the Company Line | $125, Assembler unlocked |

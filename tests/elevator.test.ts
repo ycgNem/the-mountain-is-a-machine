@@ -3,6 +3,7 @@
 // verifier's: requests overfilling a relay depot, belt cargo held in the top bay for a full depot.
 
 import { describe, expect, it } from 'vitest';
+import { layStarterLine } from '../src/app/scenarios';
 import { ITEMS } from '../src/data/items';
 import { LAYERS } from '../src/data/layers';
 import { PROJECTS } from '../src/data/progression';
@@ -28,6 +29,7 @@ function spot(g: Game, layer: number, type: string): { x: number; y: number } {
 describe('C1: requests for any stable, cool item the save has seen', () => {
   it('offers what has been made, delivered or stocked anywhere, never hot or unstable goods, deepest first', () => {
     const g = Game.create(3);
+    layStarterLine(g);
     breakthrough(g);
     const L1 = g.layer(1);
     L1.requests = {};
@@ -36,7 +38,7 @@ describe('C1: requests for any stable, cool item the save has seen', () => {
     expect(items).not.toContain('iron_ingot');
     run(g, 10);
     items = requestableItems(g, 1);
-    expect(items).toContain('iron_ingot'); // the starter line made one
+    expect(items).toContain('iron_ingot'); // the first iron line made one
     expect(items).not.toContain('resonant_core');
     // Seen: a core in the HQ, a drill bit delivered somewhere, hot and unstable goods made.
     g.layer(0).stock.resonant_core = 1;

@@ -6,7 +6,7 @@
 //
 // The layout (x, y are top-left corners; a 2x2 pushes out of its front-right tile, see find.portOf):
 //   vent      Miner MA (21,19) N on the start pocket's chorus vent; its port (22,18) feeds the Assay
-//             Lab (21,16) for M18, then the chorus lane up x=22 into the Cutter.
+//             Lab (21,16) for M19, then the chorus lane up x=22 into the Cutter.
 //   quiet     Cutter K (21,8) W -> belt (20,8) -> Charger B (18,8) W -> Splitter SPB (17,8): ahead
 //             into the Overcharger Q (14,8) W, which pushes straight into the Stabilizer NS (12,8) S
 //             (an overcharged crystal never touches a belt); left down the charged lane x=17. Shield
@@ -97,19 +97,19 @@ export function actFour(bot: Bot): void {
   bot.focus(L3);
   bot.watchItems[L3] = ['copper_wire', 'cobalt_ingot', 'insulation', 'steel_beam', 'iron_plate', 'gear', 'charged_crystal', 'circuit', 'battery'];
 
-  // M18 The Singing Rock: Mags asks for an assay. A Miner on the vent in the start pocket pushes
+  // M19 The Singing Rock: Mags asks for an assay. A Miner on the vent in the start pocket pushes
   // straight into an Assay Lab (both paid from the starter crate).
   bot.put('miner', 21, 19, N, { name: 'MA', ...at });
   bot.put('assay_lab', 21, 16, N, { name: 'LAB', ...at });
 
-  // M19 Order Matters: cut, then charge. The lab has done its job: take it up (its goods go back to
+  // M20 Order Matters: cut, then charge. The lab has done its job: take it up (its goods go back to
   // the depot) and run the chorus up to a Cutter; a Charger behind a shield wall; the charged
   // crystals down a lane that feeds a Crusher (crush charged: 2 powder each, into a circuit
   // Assembler) and the depot. The circuit recipe shows the copper it eats (4 wire each, 800 for D4),
   // and Mags said wire comes down the shaft: ask the depot to keep 400.
   bot.phases.push({
-    name: 'cut, wall, charge, crush (M19, M20)',
-    when: has(18),
+    name: 'cut, wall, charge, crush (M20, M21)',
+    when: has(19),
     act: (b) => {
       b.del(21, 16, L3);
       b.note('took up the Assay Lab (assay done)');
@@ -145,7 +145,7 @@ export function actFour(bot: Bot): void {
   // The first Charged Crystal unlocks the Overcharger, Stabilizer, Battery and Resonance Tap. The
   // Stabilizer's cost shows Insulation, which no row asks for yet.
   bot.phases.push({
-    name: 'taps, batteries, the overcharger and stabilizer (M21)',
+    name: 'taps, batteries, the overcharger and stabilizer (M22)',
     when: (b) => (b.g.s.stats.produced.charged_crystal ?? 0) > 0,
     act: (b) => {
       b.request('insulation', 40, L3);

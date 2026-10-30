@@ -319,54 +319,54 @@ describe("G5: changing an Unloader's filter gives back what it holds", () => {
 });
 
 describe('G6: Mags says where the Engine is', () => {
-  it('at M30 the nodes still asleep, at M31 the Heart, by compass and distance from the shaft', () => {
+  it('at M31 the nodes still asleep, at M32 the Heart, by compass and distance from the shaft', () => {
     const g = Game.create(3);
     openTo(g, 5);
     const nodes = [...g.s.buildings.values()].filter((b) => b.type === 'engine_node');
     expect(sleepingNodes(g).length).toBe(3);
-    // The Waking Node made its first Heartstone at M28.
+    // The Waking Node made its first Heartstone at M29.
     const waking = nodes.find((b) => b.recipe === 'waking')!;
     waking.stockCount = 1;
     expect(sleepingNodes(g).map((b) => b.id)).toEqual(nodes.filter((b) => b !== waking).map((b) => b.id));
-    const m30 = MILESTONES.findIndex((m) => m.n === 30);
+    const m31 = MILESTONES.findIndex((m) => m.n === 31);
     g.events.length = 0;
-    startMilestone(g, m30);
-    expect(messages(g)).toEqual([MILESTONES[m30].intro, 'The sleeping nodes are 26 tiles north-east and 43 tiles east of the shaft.']);
+    startMilestone(g, m31);
+    expect(messages(g)).toEqual([MILESTONES[m31].intro, 'The sleeping nodes are 26 tiles north-east and 43 tiles east of the shaft.']);
     for (const n of nodes) n.stockCount = 1;
     expect(sleepingNodes(g)).toEqual([]);
     g.events.length = 0;
-    startMilestone(g, m30 + 1);
-    expect(messages(g)).toEqual([MILESTONES[m30 + 1].intro, 'The Heart lies 36 tiles east of the shaft.']);
+    startMilestone(g, m31 + 1);
+    expect(messages(g)).toEqual([MILESTONES[m31 + 1].intro, 'The Heart lies 36 tiles east of the shaft.']);
   });
 });
 
 describe('G7: The Governor lands as a milestone before the ending', () => {
-  it('the last Heartstone into the Heart completes M31: in msDone, with its milestone event, then the ending', () => {
+  it('the last Heartstone into the Heart completes M32: in msDone, with its milestone event, then the ending', () => {
     const g = Game.create(3);
     openTo(g, 5);
-    const m31 = MILESTONES.findIndex((m) => m.n === 31);
-    startMilestone(g, m31);
+    const m32 = MILESTONES.findIndex((m) => m.n === 32);
+    startMilestone(g, m32);
     const p = g.s.project!;
     for (const [k, v] of Object.entries(PROJECTS.governor.needs)) p.delivered[k] = v;
     p.delivered.heartstone = PROJECTS.governor.needs.heartstone - 1;
     g.events.length = 0;
     expect(insert(g, find(g, 5, 'heart'), { id: 'heartstone', heat: 0 }, 0)).toBe(true);
     expect(g.s.ended).toBe(true);
-    expect(g.s.msDone).toContain(31);
+    expect(g.s.msDone).toContain(32);
     expect(g.s.milestone).toBe(MILESTONES.length);
-    expect(g.events).toContainEqual({ t: 'milestone', n: 31, name: 'The Governor' });
+    expect(g.events).toContainEqual({ t: 'milestone', n: 32, name: 'The Governor' });
     const kinds = g.events.map((e) => e.t);
     expect(kinds.indexOf('milestone')).toBeLessThan(kinds.indexOf('ending'));
     run(g, 1);
-    expect(g.s.msDone.filter((n) => n === 31)).toEqual([31]);
+    expect(g.s.msDone.filter((n) => n === 32)).toEqual([32]);
   });
 
-  it('with In Sequence (M30) still open, the last Heartstone lands M30 and then M31, each with its reward, before the ending', () => {
+  it('with In Sequence (M31) still open, the last Heartstone lands M31 and then M32, each with its reward, before the ending', () => {
     const g = Game.create(3);
     openTo(g, 5);
-    const m30 = MILESTONES.findIndex((m) => m.n === 30);
-    for (const m of MILESTONES.slice(0, m30)) g.s.msDone.push(m.n);
-    startMilestone(g, m30);
+    const m31 = MILESTONES.findIndex((m) => m.n === 31);
+    for (const m of MILESTONES.slice(0, m31)) g.s.msDone.push(m.n);
+    startMilestone(g, m31);
     // Only the Waking Node woke: the Heart is fed before the other two nodes, so In Sequence is open.
     const waking = [...g.s.buildings.values()].find((b) => b.type === 'engine_node' && b.recipe === 'waking')!;
     waking.stockCount = 1;
@@ -380,23 +380,23 @@ describe('G7: The Governor lands as a milestone before the ending', () => {
     g.events.length = 0;
     expect(insert(g, find(g, 5, 'heart'), { id: 'heartstone', heat: 0 }, 0)).toBe(true);
     expect(g.s.ended).toBe(true);
-    expect(g.s.msDone.slice(-2)).toEqual([30, 31]);
+    expect(g.s.msDone.slice(-2)).toEqual([31, 32]);
     expect(g.s.milestone).toBe(MILESTONES.length);
     // In Sequence pays its $1,000 as money, not income; The Governor's reward is the ending itself.
-    expect(MILESTONES[m30].reward.money).toBe(1000);
-    expect(MILESTONES[m30 + 1].reward).toEqual({});
+    expect(MILESTONES[m31].reward.money).toBe(1000);
+    expect(MILESTONES[m31 + 1].reward).toEqual({});
     expect(g.s.money).toBe(money + 1000);
     expect(g.incomePerMin()).toBe(income);
     // Both toasts, in order, before the ending; The Governor's intro and bearings don't play over it.
     expect(g.events.filter((e) => e.t === 'milestone')).toEqual([
-      { t: 'milestone', n: 30, name: 'In Sequence' },
-      { t: 'milestone', n: 31, name: 'The Governor' },
+      { t: 'milestone', n: 31, name: 'In Sequence' },
+      { t: 'milestone', n: 32, name: 'The Governor' },
     ]);
     const kinds = g.events.map((e) => e.t);
     expect(kinds.lastIndexOf('milestone')).toBeLessThan(kinds.indexOf('ending'));
     expect(messages(g)).toEqual(['Foreman... listen. It is not humming any more. It is singing.']);
     run(g, 1);
-    expect(g.s.msDone.filter((n) => n >= 30)).toEqual([30, 31]);
+    expect(g.s.msDone.filter((n) => n >= 31)).toEqual([31, 32]);
   });
 });
 
@@ -437,9 +437,9 @@ describe('G9: hints, and the breakthrough line about drill lines', () => {
     expect(messages(g).some((t) => t.includes('your drill lines'))).toBe(false);
   });
 
-  it('M28 says to belt the Heartstones away; M25 says a hot line needs an overflow into the depot', () => {
-    expect(MILESTONES.find((m) => m.n === 28)!.hint).toContain('Belt the Heartstones away from its front: it holds only four.');
-    expect(MILESTONES.find((m) => m.n === 25)!.hint).toContain('a hot line that backs up still cools: give it an overflow into the depot.');
+  it('M29 says to belt the Heartstones away; M26 says a hot line needs an overflow into the depot', () => {
+    expect(MILESTONES.find((m) => m.n === 29)!.hint).toContain('Belt the Heartstones away from its front: it holds only four.');
+    expect(MILESTONES.find((m) => m.n === 26)!.hint).toContain('a hot line that backs up still cools: give it an overflow into the depot.');
   });
 });
 

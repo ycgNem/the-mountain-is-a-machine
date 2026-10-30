@@ -52,7 +52,12 @@ export class Input {
       const k = normKey(e);
       if (['Tab', ' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'F1', 'Backspace'].includes(e.key)) e.preventDefault();
       if ((e.ctrlKey || e.metaKey) && (k === 's' || k === 'z')) e.preventDefault();
-      if (!this.keys.has(k)) this.keyPressed.add(k);
+      if (!this.keys.has(k)) {
+        this.keyPressed.add(k);
+        // Shortcuts carry their modifier with the press ('Mod+z' for Ctrl+Z or Cmd+Z), so one
+        // typed faster than a frame still counts after Ctrl is let go.
+        if (e.ctrlKey || e.metaKey) this.keyPressed.add(`Mod+${k}`);
+      }
       this.keys.add(k);
       this.gesture();
     });

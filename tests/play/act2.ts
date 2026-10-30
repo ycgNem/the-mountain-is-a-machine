@@ -26,9 +26,11 @@
 //            Assembler ADB (38,11) S; its drill bits drop onto the trunk at (38,13).
 //     motors Unloader UM (37,10) E -> east along y=10, down x=43 onto the trunk.
 //     trunk  (38,13) E to x=43, down to (43,18), then through a 1-wide tunnel dug toward the bore
-//            site's beacon (it breaks into the hidden copper cavern on the way) into the Drill (56..60,
-//            38..42). One trunk carries beams, bits and motors: once the Drill has all of a good,
-//            the crew stacks the extras by the depot, so a spare never stops it.
+//            site's beacon (it breaks into the hidden copper cavern on the way: Down the Shaft's
+//            "Dig to the copper") into the Drill (56..60, 38..42). One trunk carries beams, bits and
+//            motors: once the Drill has all of a good, the crew stacks the extras by the depot, so a
+//            spare never stops it.
+//     survey Down the Shaft's survey, over that copper cavern, once the tunnel is paid for.
 //     after D2  the Drill is gone and the trunk ends on bare floor; ADB comes back on, turned east,
 //            and belts its bits into the depot's north face for the Fungal Caverns below.
 //
@@ -36,7 +38,9 @@
 
 import { BUILDINGS } from '../../src/data/buildings';
 import { ITEMS } from '../../src/data/items';
+import { LAYERS } from '../../src/data/layers';
 import { requestNeed } from '../../src/sim/elevator';
+import { nearestDeposit } from '../../src/sim/progress';
 import { Bot, E, N, S, W, starveAdvice } from '../bot';
 import { boreSite, depot, drill } from './find';
 import { actDone, startFromActI } from './start';
@@ -90,9 +94,9 @@ export function actTwo(bot: Bot, style: Act2Style = COMPETENT): void {
   // Act I's HQ gear keeper stays on: the Surface's motor Assembler needs 6 gears and the HQ has none.
   let trunkLaid = false;
 
-  // M7 Down the Shaft: ride down, light the pocket. The Surface's dead drill lines go into the shaft.
+  // M8 Down the Shaft: ride down, light the pocket. The Surface's dead drill lines go into the shaft.
   bot.phases.push({
-    name: 'down the shaft: lamps (M7), Surface drill lines into the top station',
+    name: 'down the shaft: lamps (M8), Surface drill lines into the top station',
     when: () => true,
     act: (b) => {
       b.focus(1);
@@ -109,9 +113,9 @@ export function actTwo(bot: Bot, style: Act2Style = COMPETENT): void {
     },
   });
 
-  // M8 Steel: rich iron straight into a smelter and the foundry; coal from the second coal spot.
+  // M9 Steel: rich iron straight into a smelter and the foundry; coal from the second coal spot.
   bot.phases.push({
-    name: 'steel: iron, coal, foundry (M8)',
+    name: 'steel: iron, coal, foundry (M9)',
     when: () => true,
     act: (b) => {
       b.put('miner', 24, 13, E, { name: 'MI1', ...L1 });
@@ -168,6 +172,18 @@ export function actTwo(bot: Bot, style: Act2Style = COMPETENT): void {
     when: () => true,
     act: (b) => {
       b.digPath(boreSite(b.g, 1)!, { from: POCKET_EXIT, layer: 1 });
+    },
+  });
+
+  // Down the Shaft asks for a survey: the dark south-east of the pocket hides the rich copper the tunnel
+  // breaks into (its cave is "Dig to the copper"). Once the tunnel is paid for, with the first $300 to
+  // spare, over the copper Mags marks.
+  bot.phases.push({
+    name: 'survey over the copper south-east of the pocket (M8)',
+    when: (b) => b.g.layer(1).digQueue.length === 0 && b.g.s.money >= LAYERS[1].surveyCost,
+    act: (b) => {
+      const d = nearestDeposit(1, 'copper_ore')!;
+      b.survey(d.x, d.y, 1);
     },
   });
 
@@ -276,14 +292,14 @@ export function actTwo(bot: Bot, style: Act2Style = COMPETENT): void {
   // "Produce" steps count from the milestone's start: note what a player who built ahead loses.
   const motorsAtStart = bot.g.s.stats.produced.motor ?? 0;
   bot.watchers.push({
-    name: 'motors made before Motors (M9) started',
+    name: 'motors made before Motors (M10) started',
     check: (b) => {
-      if (!b.g.s.msDone.includes(8)) return;
+      if (!b.g.s.msDone.includes(9)) return;
       const early = (b.g.s.msBase.produced.motor ?? 0) - motorsAtStart;
       if (early > 0) {
         b.noteFriction(
-          `Motors (M9) counts only motors made after it starts (stepProgress in src/sim/progress.ts counts produce steps from msBase): the ${early} the Surface motor Assembler made while Steel (M8) ran ` +
-            "don't count, though build steps count what already stands (DECISIONS #50). The objectives panel can't show it: M9 isn't listed until M8 is done",
+          `Motors (M10) counts only motors made after it starts (stepProgress in src/sim/progress.ts counts produce steps from msBase): the ${early} the Surface motor Assembler made while Steel (M9) ran ` +
+            "don't count, though build steps count what already stands (DECISIONS #50). The objectives panel can't show it: M10 isn't listed until M9 is done",
         );
       }
       return true;
@@ -329,6 +345,6 @@ export function playAct2(opts: PlayAct2Opts = {}): Bot {
     bot.note(`Act II starts: $${Math.round(bot.g.s.money)}`);
   }
   actTwo(bot, opts.style ?? COMPETENT);
-  bot.play(bot.t0 + (opts.maxSeconds ?? 60 * 60), (b) => actDone(b, 2) && b.g.s.msDone.includes(11));
+  bot.play(bot.t0 + (opts.maxSeconds ?? 60 * 60), (b) => actDone(b, 2) && b.g.s.msDone.includes(12));
   return bot;
 }

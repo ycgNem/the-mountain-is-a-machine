@@ -46,7 +46,7 @@ function details(bot: Bot): string[] {
 }
 
 describe('Act IV pacing bot', () => {
-  it('finishes M18-M22 and D4 inside the cap, with no deadlock, rush or jam', () => {
+  it('finishes M19-M23 and D4 inside the cap, with no deadlock, rush or jam', () => {
     const t0 = performance.now();
     const bot = playAct4({ maxSeconds: CAP });
     const ms = performance.now() - t0;

@@ -1,13 +1,20 @@
-// The in-game HUD: top bar (with the depot strip), objectives, the Stack, the build bar, radio,
-// toasts and hover info.
+// The in-game HUD: the top bar (money, income, the layer, power, the depot strip, the buttons),
+// objectives, the Stack, the build bar with its tool help line, the radio, toasts, the breakthrough
+// card and hover info.
+//
+// Everything is drawn with the UI kit (ui.ts, STYLE.md "UI"). The top bar and the help line are thin
+// strips of readouts split by engraved rules; every rate is its number with a dim "/min" after it
+// (UI.rate, rateText); every shortcut is a key cap. The tutorial's next step glows where its control
+// is (guideFocus): the building's slot or its tab, or the Dig or Survey tool.
 
 import type { App } from '../app/app';
 import { BUILDING_LIST, BUILDINGS, CATEGORIES, LICENSES, type BuildingDef } from '../data/buildings';
 import { ITEMS, itemShort } from '../data/items';
 import { LAYERS, PURITY_NAME } from '../data/layers';
-import { C } from '../data/palette';
-import { MILESTONES, PROJECTS } from '../data/progression';
+import { C, UIC } from '../data/palette';
+import { MILESTONES, PROJECTS, type MilestoneDef } from '../data/progression';
 import { RECIPES } from '../data/recipes';
+import { beltFrame, beltTile } from '../render/belts';
 import { iconCanvas } from '../render/icons';
 import { TILE } from '../render/terrain';
 import { heldCargo, shaftTraffic } from '../sim/elevator';
@@ -15,10 +22,10 @@ import { predictPlacement } from '../sim/env';
 import { STOCK_CAP, SURVEY_RADIUS, type Game } from '../sim/game';
 import { depotItem } from '../sim/logistics';
 import { jamFresh } from '../sim/production';
-import { stepProgress } from '../sim/progress';
-import type { Building } from '../sim/types';
+import { currentHint, currentStep, stepProgress } from '../sim/progress';
+import { T_ROCK, type Building } from '../sim/types';
 import { drawText, fitText, LINE_H, measureText, money, wrapText } from './font';
-import type { Rect } from './ui';
+import { fitItemName, keyChipWidth, keyHintWidth, rateText, rateWidth, TOP_BAR_H, type Rect, type UI } from './ui';
 
 const STATUS_TEXT: Record<string, string> = {
   ok: 'Working',
@@ -101,22 +108,17 @@ export function projectJamText(b: Building): string | null {
  */
 export function drawHud(app: App, camX: number, camY: number, full = true): void {
   if (full) {
+    const focus = guideFocus(app);
     drawFloats(app, camX, camY);
-    topBar(app);
+    topBar(app, focus);
     objectives(app);
     stack(app);
-    buildBar(app);
+    buildBar(app, focus);
     radio(app);
     toasts(app);
     if (app.card) breakthroughCard(app);
   }
-  if (app.paused) {
-    const ui = app.ui;
-    const t = 'PAUSED (Space)';
-    const w = measureText(t) + 10;
-    ui.panel(Math.floor(ui.w / 2 - w / 2), 34, w, 13);
-    ui.textCenter(t, ui.w / 2, 37, C.pale);
-  }
+  if (app.paused) pausedPlate(app);
   if (full) hoverInfo(app, camX, camY);
 }
 
@@ -143,50 +145,133 @@ function drawFloats(app: App, camX: number, camY: number): void {
   }
 }
 
+/** The free middle of the screen's top (UI px): from right of the objectives to left of the Stack or the open inspector. */
+function topGap(app: App): { left: number; right: number } {
+  return { left: 4 + OBJECTIVES_W + 4, right: (app.inspectorRect?.x ?? app.ui.w - STACK_W - 3) - 4 };
+}
+
+/**
+ * A w px wide strip's x in the top gap: the paused plate and the toasts are centred there, one over
+ * the other, so they don't cover a panel's title. One wider than the gap starts at its left, clear of
+ * the objectives, and runs over the right side.
+ */
+function gapX(app: App, w: number): number {
+  const ui = app.ui;
+  const { left, right } = topGap(app);
+  if (w <= right - left) return Math.floor((left + right) / 2 - w / 2);
+  return Math.max(2, Math.min(left, ui.w - 2 - w));
+}
+
+/** The paused plate, under the top bar; the toasts start under it while it shows. */
+const PAUSED_Y = 19;
+const PAUSED_H = 13;
+
+/** "PAUSED" under the top bar, with the key that resumes. */
+function pausedPlate(app: App): void {
+  const ui = app.ui;
+  const label = 'Paused';
+  const w = 6 + measureText(label, 'head') + 7 + keyHintWidth('Space', 'resumes') + 6;
+  const x = gapX(app, w);
+  ui.panel(x, PAUSED_Y, w, PAUSED_H);
+  const cx = x + 6 + ui.head(label, x + 6, PAUSED_Y + 3, UIC.title) + 6;
+  ui.keyHint('Space', 'resumes', cx, PAUSED_Y + 3, UIC.soft);
+}
+
+// ------------------------------------------------------------------ small pieces
+
+/** The top bar's text line. */
+const BAR_TY = 4;
+
+/** An engraved upright rule between two of the top bar's readouts, at x. Returns where the next readout starts. */
+function rule(ui: UI, x: number): number {
+  ui.vr(x, 3, 9);
+  return x + 6;
+}
+
+/**
+ * The tutorial's pointer at a control: a pale ring just outside the button's outline that breathes
+ * slowly, so it draws the eye without flashing. It fits the 1 px gap between neighbouring buttons.
+ */
+function guideRing(app: App, x: number, y: number, w: number, h: number): void {
+  const ui = app.ui;
+  const a = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(app.time * Math.PI * 1.6));
+  ui.fill(x - 2, y - 2, w + 4, 1, C.pale, a);
+  ui.fill(x - 2, y + h + 1, w + 4, 1, C.pale, a);
+  ui.fill(x - 2, y - 1, 1, h + 2, C.pale, a);
+  ui.fill(x + w + 1, y - 1, 1, h + 2, C.pale, a);
+  // A wash over the face, fainter, so a ring on a dark slot still reads at a glance.
+  ui.fill(x, y, w, h, C.pale, 0.12 * a);
+}
+
+const ICONS = new Map<string, HTMLCanvasElement>();
+
+/** A small pixel icon from rows of colour keys, made on first use (tests load this file without a DOM). */
+function pixelIcon(name: string, rows: string[], colors: Record<string, string>): HTMLCanvasElement {
+  let c = ICONS.get(name);
+  if (c) return c;
+  c = document.createElement('canvas');
+  c.width = rows[0].length;
+  c.height = rows.length;
+  const ctx = c.getContext('2d')!;
+  rows.forEach((r, y) => {
+    for (let x = 0; x < r.length; x++) {
+      const col = colors[r[x]];
+      if (!col) continue;
+      ctx.fillStyle = col;
+      ctx.fillRect(x, y, 1, 1);
+    }
+  });
+  ICONS.set(name, c);
+  return c;
+}
+
 // ------------------------------------------------------------------ top bar
 
-function topBar(app: App): void {
+function topBar(app: App, focus: Focus): void {
   const ui = app.ui;
   const g = app.game!;
   const s = g.s;
   const L = g.layer(app.layer);
-  ui.panel(0, 0, ui.w, 15);
+  ui.panel(0, 0, ui.w, TOP_BAR_H);
+  const ty = BAR_TY;
   let x = 4;
-  ui.image(iconCanvas('money'), x, 4);
+  // Money.
+  const mx = x;
+  ui.image(iconCanvas('money'), x, ty);
   x += 10;
-  x += ui.text(money(s.money), x, 4, C.pale) + 4;
-  const ipm = g.incomePerMin();
-  const ix = x;
-  x += ui.text(`+${money(ipm)}/min`, x, 4, C.steel2);
-  if (ui.hover(ix, 2, x - ix, 11)) ui.tooltip('Income over the last minute\nSales at the Terminal and the Chutes, and contract pay. Milestone rewards add to your money but not to this.');
-  x += 10;
+  x += ui.text(money(s.money), x, ty, UIC.money);
+  if (ui.hover(mx - 1, 1, x - mx + 1, 13)) ui.tooltip(`Money: ${money(s.money)}\nSales and contracts pay it in. Digging, surveys, rushes, licenses and upgrades spend it. Buildings are paid in goods from the depot, not money.`);
+  x = rule(ui, x + 3);
+  x = income(app, x);
+  x = rule(ui, x + 3);
   // The layer by its key word ("FUNGAL"); its full name and depth are in the hover, so the depot strip
   // keeps the room underground.
   const def = LAYERS[app.layer];
   const lx = x;
-  x += ui.text(def.short.toUpperCase(), x, 4, C.white);
-  if (ui.hover(lx, 2, x - lx, 11)) ui.tooltip(`${def.name}${def.depth > 0 ? `, ${def.depth} m down` : ', on the surface'}\n[ and ] switch layers, or click one in the Stack.`);
-  x += 10;
+  x += ui.head(def.short, x, ty, UIC.text);
+  if (ui.hover(lx - 1, 1, x - lx + 1, 13)) ui.tooltip(`${def.name}${def.depth > 0 ? `, ${def.depth} m down` : ', on the surface'}\n[ and ] switch layers, or click one in the Stack.`);
+  x = rule(ui, x + 3);
   // Power meter. Available power is what the demand is getting plus any spare (supply and imports).
   const p = L.power;
   const avail = p.demand * p.sat + Math.max(0, p.net);
   const px = x;
-  ui.image(iconCanvas('power'), x, 4);
+  ui.image(iconCanvas('power'), x, ty);
   x += 9;
   const frac = avail > 0 ? Math.min(1, p.demand / Math.max(1, avail)) : p.demand > 0 ? 1 : 0;
-  const col = p.sat < 0.99 ? C.coral : frac > 0.85 ? C.gold : C.cyan;
-  ui.bar(x, 4, 40, 7, frac, col);
-  x += 44;
-  x += ui.text(`${Math.round(p.demand)}/${Math.round(Math.max(avail, p.demand * p.sat))} kW`, x, 4, p.sat < 0.99 ? C.coral : C.steel3);
-  if (ui.hover(px, 2, x - px, 11)) {
+  const short = p.sat < 0.99;
+  ui.bar(x, ty, 32, 7, frac, short ? UIC.bad : frac > 0.85 ? UIC.warn : UIC.power);
+  x += 36;
+  x += ui.text(`${Math.round(p.demand)}/${Math.round(Math.max(avail, p.demand * p.sat))}`, x, ty, short ? UIC.bad : UIC.text);
+  x += ui.text('kW', x + 3, ty, UIC.dim) + 3;
+  if (ui.hover(px - 1, 1, x - px + 1, 13)) {
     let tip = `Power on this layer\nDemand ${Math.round(p.demand)} kW, satisfied ${Math.round(p.sat * 100)}%`;
     if (app.layer === 0) tip += `\nCompany Line: ${g.lineKw()} kW`;
     if (p.genCap > 0) tip += `\nGenerators: ${Math.round(p.genUsed)}/${Math.round(p.genCap)} kW in use`;
     tip += '\nShaft cables share spare power between layers.';
-    if (p.sat < 0.99) tip += '\nShort on power: every machine here runs slower.';
+    if (short) tip += '\nShort on power: every machine here runs slower.';
     ui.tooltip(tip);
   }
-  x += 6;
+  x = rule(ui, x + 3);
   // Right side controls.
   let rx = ui.w - 4;
   const btn = (label: string, w: number, active: boolean, tip: string, icon?: HTMLCanvasElement): boolean => {
@@ -196,12 +281,13 @@ function topBar(app: App): void {
     return r;
   };
   if (btn('', 13, app.win === 'menu', 'Menu (Esc)', iconCanvas('menu'))) app.win = app.win === 'menu' ? null : 'menu';
-  if (btn('2x', 17, app.speed === 2, 'Game speed (Tab)')) app.speed = 2;
-  if (btn('1x', 17, app.speed === 1, 'Game speed (Tab)')) app.speed = 1;
-  if (btn('', 13, app.paused, 'Pause (Space)', iconCanvas(app.paused ? 'play' : 'pause'))) app.paused = !app.paused;
+  if (btn('2×', 16, app.speed === 2, 'Double speed (Tab)')) app.speed = 2;
+  if (btn('1×', 16, app.speed === 1, 'Normal speed (Tab)')) app.speed = 1;
+  if (btn('', 13, app.paused, app.paused ? 'Resume (Space)' : 'Pause (Space)', iconCanvas(app.paused ? 'play' : 'pause'))) app.paused = !app.paused;
   rx -= 4;
   if (btn('Help', 28, app.win === 'help', 'Help and knowledge cards (H)')) app.win = app.win === 'help' ? null : 'help';
   if (btn('Company', 44, app.win === 'company', 'Contracts, licenses and the Company Line (C)')) app.win = app.win === 'company' ? null : 'company';
+  if (focus?.company) guideRing(app, rx + 3, 2, 44, 11);
   // Overlay toggles when relevant.
   if (app.layer === 2 || L.sporeBase.some((v) => v > 0)) {
     if (btn('Spores', 38, app.overlays.spores, 'Show the spore overlay')) app.overlays.spores = !app.overlays.spores;
@@ -216,12 +302,28 @@ function topBar(app: App): void {
   depotStrip(app, x, rx - 4);
 }
 
+/**
+ * Income, as its own readout: a dim INCOME label, then the amount in the gain colour with a dim
+ * "/min" after it, so it never reads as part of the money beside it. Returns where it ends.
+ */
+function income(app: App, x0: number): number {
+  const ui = app.ui;
+  const ipm = app.game!.incomePerMin();
+  let x = x0;
+  x += ui.text('INCOME', x, BAR_TY, UIC.dim) + 2;
+  x += ui.rate(x, BAR_TY, ipm, ipm > 0 ? UIC.good : UIC.dim, { money: true, sign: true });
+  if (ui.hover(x0 - 2, 1, x - x0 + 3, 13)) {
+    ui.tooltip(`Income: ${rateText(ipm, { money: true, sign: true })}\nWhat came in over the last minute: sales at the Shipping Terminal and the Company Chutes, and contract pay. Milestone rewards add to your money, but they aren't income.`);
+  }
+  return x;
+}
+
 // ------------------------------------------------------------------ depot strip
 
 /** The HQ's strip: the basics everything on the Surface is built from. */
 const HQ_STRIP = ['iron_plate', 'gear', 'copper_wire', 'brick'];
 const STRIP_MAX = 6;
-const STRIP_GAP = 5;
+const STRIP_GAP = 6;
 /** Seconds of deliveries one "+N" adds up, and how long it shows. */
 const FLASH_GATHER = 0.6;
 const FLASH_LIFE = 1.2;
@@ -283,7 +385,7 @@ function depotStrip(app: App, x0: number, x1: number): void {
   strip.floats = strip.floats.filter((f) => app.time - f.t < FLASH_LIFE);
   // Fit: at most six, and only what the room takes. Dropped first: goods at or above their request
   // (or with none), then goods below it, last what the plan lacks; within each, from the end.
-  const entryW = (k: string) => 14 + 2 + measureText(String(count(k)));
+  const entryW = (k: string) => 13 + measureText(String(count(k)));
   const width = (l: string[]) => l.reduce((a, k) => a + entryW(k) + STRIP_GAP, 0) - STRIP_GAP;
   const keep = (k: string) => (lack[k] ? 2 : L.requests[k] !== undefined && count(k) < L.requests[k] ? 1 : 0);
   const list = [...all];
@@ -297,9 +399,8 @@ function depotStrip(app: App, x0: number, x1: number): void {
   for (const k of list) {
     const n = count(k);
     const w = entryW(k);
-    ui.spriteCrop(`i_${k}`, x, 0, 14, 14);
-    ui.text(String(n), x + 16, 4, lack[k] ? C.coral : n > 0 ? C.white : C.steel2);
-    if (ui.hover(x, 1, w, 13)) {
+    ui.counter(x, BAR_TY, `i_${k}`, n, lack[k] ? UIC.bad : n > 0 ? UIC.text : UIC.dim);
+    if (ui.hover(x - 1, 1, w + 2, 13)) {
       let tip = `${ITEMS[k].name}: ${n} in ${depotName(li)}`;
       const r = L.requests[k];
       if (r !== undefined) tip += li === 0 ? `\nKept for the Surface: ${r} (the elevator never takes the HQ below it)` : `\nRequested: ${r} (the elevator keeps this many here)`;
@@ -311,13 +412,13 @@ function depotStrip(app: App, x0: number, x1: number): void {
     for (const f of strip.floats) {
       if (f.item !== k) continue;
       const age = (app.time - f.t) / FLASH_LIFE;
-      const fx = x + 16;
+      const fx = x + 13;
       const fy = Math.round(21 - age * 6);
       const lit = lack[k] ? null : String(n);
       ui.late(() => {
         ui.ctx.globalAlpha = Math.max(0, 1 - age);
-        if (!ui.overPanel({ x: fx - 1, y: fy, w: measureText(f.text) + 2, h: 8 })) drawText(ui.ctx, f.text, fx, fy, C.lime, C.ink);
-        else if (lit) drawText(ui.ctx, lit, fx, 4, C.lime);
+        if (!ui.overPanel({ x: fx - 1, y: fy, w: measureText(f.text) + 2, h: 8 })) drawText(ui.ctx, f.text, fx, fy, UIC.good, C.ink);
+        else if (lit) drawText(ui.ctx, lit, fx, BAR_TY, UIC.good);
         ui.ctx.globalAlpha = 1;
       });
     }
@@ -329,73 +430,159 @@ function depotStrip(app: App, x0: number, x1: number): void {
 
 /** The objectives panel's width (UI px). */
 export const OBJECTIVES_W = 172;
+/** Where a step's label starts in the objectives panel: past its 7 px check box at x + 5 and a 3 px gap. */
+const STEP_LABEL_X = 15;
+/** A step's row: a line with a check box. */
+const STEP_ROW = 11;
 
 /**
  * The room a step label gets in the objectives panel: from just right of its checkbox to the panel's
  * edge, or to the count drawn at the right ("3/10"). Labels longer than this are cut (tests/ui-labels).
  */
 export function stepLabelRoom(count: string): number {
-  return OBJECTIVES_W - 14 - 5 - (count ? measureText(count) + 5 : 0);
+  return OBJECTIVES_W - STEP_LABEL_X - 5 - (count ? measureText(count) + 5 : 0);
+}
+
+/**
+ * The hint under the steps: the current step's own (the UI path and the control for what to do next),
+ * else the milestone's (progress.ts currentHint).
+ */
+function objectiveHint(g: Game): string | undefined {
+  return currentHint(g);
 }
 
 function objectives(app: App): void {
   const ui = app.ui;
   const g = app.game!;
   const s = g.s;
-  const m = MILESTONES[s.milestone];
   const x = 4;
   const y = 19;
   const w = OBJECTIVES_W;
   if (s.ended) {
-    if (covered(app, { x, y, w, h: 30 })) return;
-    ui.panel(x, y, w, 30, 'The Mountain Is Awake');
-    ui.text('Free play: contracts never stop.', x + 5, y + 16, C.steel3);
+    const h = 31;
+    if (covered(app, { x, y, w, h })) return;
+    ui.panel(x, y, w, h, 'The Mountain Is Awake');
+    ui.text('Free play: contracts never stop.', x + 5, y + 16, UIC.soft);
     return;
   }
+  const m = MILESTONES[s.milestone];
   if (!m) return;
-  const steps = m.steps.map((st) => stepProgress(g, st));
-  const hint = m.hint ? wrapText(m.hint, w - 10) : [];
-  let h = 16 + steps.length * 11 + 4;
-  // Project details for drill milestones.
-  const proj = m.steps.find((st) => st.kind === 'project');
-  const pdef = proj && proj.kind === 'project' ? PROJECTS[proj.project] : null;
-  if (pdef && s.project?.id === pdef.id) h += Object.keys(pdef.needs).length * 10 + 14;
-  h += hint.length * LINE_H + (hint.length ? 3 : 0);
+  const eta = feedsProject(g, m) ? projectEta(app) : null;
+  // Lay the body out without drawing it to size the panel, then draw it.
+  ui.measuring = true;
+  let end = y;
+  try {
+    end = objectivesBody(app, m, eta, x, y, w);
+  } finally {
+    ui.measuring = false;
+  }
+  const h = end - y + 6;
   // Under a window it waits: the window's edge would cut its lines mid-word.
   if (covered(app, { x, y, w, h })) return;
   ui.panel(x, y, w, h, `${m.n}. ${m.name}`);
+  objectivesBody(app, m, eta, x, y, w);
+}
+
+/** Is this milestone's drill project the one running now (so its needs and pace show)? */
+function feedsProject(g: Game, m: MilestoneDef): boolean {
+  const st = m.steps.find((q) => q.kind === 'project');
+  return !!st && st.kind === 'project' && g.s.project?.id === st.project;
+}
+
+/**
+ * The objectives under the title: the steps (the one to do now on a lit band, done ones ticked), the
+ * running project's goods and pace, then the hint. Returns the bottom row of what it drew.
+ */
+function objectivesBody(app: App, m: MilestoneDef, eta: Eta | null, x: number, y: number, w: number): number {
+  const ui = app.ui;
+  const g = app.game!;
+  const now = currentStep(g);
   let cy = y + 16;
-  for (const sp of steps) {
-    const done = sp.done;
-    ui.fill(x + 5, cy + 1, 6, 6, C.ink);
-    ui.fill(x + 6, cy + 2, 4, 4, done ? C.lime : C.panel2);
+  let end = cy;
+  for (const st of m.steps) {
+    const sp = stepProgress(g, st);
+    const cur = st === now;
+    if (cur) {
+      ui.fill(x + 3, cy - 2, w - 6, STEP_ROW, C.panel2);
+      ui.fill(x + 3, cy - 2, 1, STEP_ROW, C.amber);
+    }
+    stepBox(ui, x + 5, cy, sp.done, cur);
     const count = sp.max > 1 ? `${Math.min(sp.cur, sp.max)}/${sp.max}` : '';
     const room = stepLabelRoom(count);
-    ui.text(fitText(sp.label, room), x + 14, cy, done ? C.steel2 : C.white);
-    if (count) ui.textRight(count, x + w - 5, cy, done ? C.lime : C.pale);
-    if (ui.hover(x, cy - 1, w, 10) && measureText(sp.label) > room) ui.tooltip(sp.label);
-    cy += 11;
+    ui.text(fitText(sp.label, room), x + STEP_LABEL_X, cy, sp.done ? UIC.dim : cur ? UIC.text : UIC.soft);
+    if (count) ui.textRight(count, x + w - 5, cy, sp.done ? UIC.good : cur ? UIC.text : UIC.dim);
+    if (ui.hover(x, cy - 2, w, STEP_ROW) && measureText(sp.label) > room) ui.tooltip(sp.label);
+    end = cy + 8;
+    cy += STEP_ROW;
   }
-  if (pdef && s.project?.id === pdef.id) {
-    cy += 2;
-    const eta = projectEta(app);
-    for (const [k, v] of Object.entries(pdef.needs)) {
-      const have = Math.min(v, s.project.delivered[k] ?? 0);
-      // A needed good with nothing arriving: its count in coral, and the ETA line names it.
-      const dry = eta.dry.includes(k);
-      ui.sprite(`i_${k}`, x + 5, cy - 4, 1, 1);
-      ui.text(ITEMS[k].name, x + 22, cy, have >= v ? C.steel2 : C.steel3);
-      ui.textRight(`${have}/${v}`, x + w - 5, cy, have >= v ? C.lime : dry ? C.coral : C.white);
-      if (dry && ui.hover(x, cy - 2, w, 10)) ui.tooltip(`${ITEMS[k].name}: no supply\nNone has arrived in the last ${duration(eta.span)}: belt some in.`);
-      cy += 10;
-    }
-    ui.text(fitText(eta.line, w - 10), x + 5, cy + 1, eta.dry.length ? C.coral : C.steel2);
-    cy += 12;
+  if (eta) end = projectRows(app, eta, x, end + 3, w);
+  const hint = objectiveHint(g);
+  if (hint) end = hintRows(ui, hint, x, end + 3, w);
+  return end;
+}
+
+/** A step's check box: ticked once done; the step to do now has an amber rim round a dark middle. */
+function stepBox(ui: UI, x: number, y: number, done: boolean, cur: boolean): void {
+  if (done || !cur) {
+    ui.checkbox(x, y, done, UIC.good);
+    return;
   }
-  for (const l of hint) {
-    ui.text(l, x + 5, cy + 1, C.steel2);
+  ui.fill(x, y, 7, 7, C.ink);
+  ui.fill(x + 1, y + 1, 5, 5, C.amber);
+  ui.fill(x + 2, y + 2, 3, 3, C.night);
+}
+
+/**
+ * The running project's goods under a rule: each one's icon, name, delivery pace and count, then when
+ * it finishes at that pace. Returns the bottom row.
+ */
+function projectRows(app: App, eta: Eta, x: number, y: number, w: number): number {
+  const ui = app.ui;
+  const p = app.game!.s.project!;
+  ui.hr(x + 5, y, w - 10);
+  let cy = y + 5;
+  const needs = Object.entries(PROJECTS[p.id].needs);
+  // The counts get one column, as wide as the widest can grow, so the paces line up down the rows.
+  const countW = Math.max(...needs.map(([, v]) => measureText(`${v}/${v}`)));
+  const paceR = x + w - 5 - countW - 6;
+  for (const [k, v] of needs) {
+    const have = Math.min(v, p.delivered[k] ?? 0);
+    const done = have >= v;
+    // A needed good with nothing arriving: its count in coral, and the line under the goods names it.
+    const dry = eta.dry.includes(k);
+    ui.icon(`i_${k}`, x + 5, cy);
+    const count = `${have}/${v}`;
+    ui.textRight(count, x + w - 5, cy, done ? UIC.good : dry ? UIC.bad : UIC.text);
+    let nameEnd = paceR;
+    const pace = eta.rates[k] ?? 0;
+    if (!done && pace > 0) nameEnd = ui.rateRight(paceR, cy, pace, UIC.soft) - 5;
+    ui.text(fitItemName(k, nameEnd - (x + 19)), x + 19, cy, done ? UIC.dim : UIC.soft);
+    if (dry && ui.hover(x, cy - 2, w, STEP_ROW)) ui.tooltip(`${ITEMS[k].name}: no supply\nNone has arrived in the last ${duration(eta.span)}: belt some in.`);
+    cy += STEP_ROW;
+  }
+  // The finish: a label and its value, like the rows above.
+  if (eta.dry.length) {
+    const label = 'No supply';
+    ui.text(label, x + 5, cy, UIC.bad);
+    ui.textRight(fitText(eta.dry.map(itemShort).join(', '), w - 10 - measureText(label) - 6), x + w - 5, cy, UIC.bad);
+  } else if (eta.secs > 0) {
+    ui.text('At this pace', x + 5, cy, UIC.dim);
+    ui.textRight(duration(eta.secs), x + w - 5, cy, UIC.text);
+  } else {
+    ui.text(eta.note, x + 5, cy, UIC.dim);
+  }
+  return cy + 8;
+}
+
+/** The hint, under a rule, in the secondary colour. Returns the bottom row. */
+function hintRows(ui: UI, hint: string, x: number, y: number, w: number): number {
+  ui.hr(x + 5, y, w - 10);
+  let cy = y + 5;
+  for (const l of wrapText(hint, w - 10)) {
+    ui.text(l, x + 5, cy, UIC.soft);
     cy += LINE_H;
   }
+  return cy - LINE_H + 8;
 }
 
 /** The window (game seconds) each good's delivery rate is taken over: long enough for a slow good. */
@@ -406,49 +593,61 @@ const ETA_SAMPLE = 2;
 const ETA_SETTLE = 10;
 
 /** Samples of the running project's deliveries per good, for its ETA. One history per game and project. */
-let eta: { game: Game | null; project: string; hist: { t: number; got: Record<string, number> }[] } = { game: null, project: '', hist: [] };
+let etaHist: { game: Game | null; project: string; hist: { t: number; got: Record<string, number> }[] } = { game: null, project: '', hist: [] };
+
+interface Eta {
+  /** Seconds to finish at this pace, or 0 when there is no honest time to give (`note` says why). */
+  secs: number;
+  note: string;
+  /** Needed goods with nothing arriving over `span`. */
+  dry: string[];
+  /** Game seconds the samples span. */
+  span: number;
+  /** Each unfinished good's delivery pace per minute, once it has one. */
+  rates: Record<string, number>;
+}
 
 /**
- * The running project's ETA line, and the needed goods with nothing arriving ("dry") over the game
- * seconds the samples span. Each good's rate comes from its own deliveries over the last ETA_WINDOW;
- * the ETA is the slowest good's. While any needed good is dry no time is printed (it would be a bogus
- * short one): the line names the dry goods.
+ * The running project's pace: each good's rate from its own deliveries over the last ETA_WINDOW, the
+ * finish time from the slowest good's, and the needed goods with nothing arriving ("dry") over the
+ * game seconds the samples span. While any needed good is dry no time is given (it would be a bogus
+ * short one): the dry goods are named instead.
  */
-function projectEta(app: App): { line: string; dry: string[]; span: number } {
+function projectEta(app: App): Eta {
   const g = app.game!;
   const p = g.s.project;
-  if (!p) return { line: '', dry: [], span: 0 };
+  const none: Eta = { secs: 0, note: '', dry: [], span: 0, rates: {} };
+  if (!p) return none;
   const needs = Object.entries(PROJECTS[p.id].needs);
   const got: Record<string, number> = {};
   for (const [k, v] of needs) got[k] = Math.min(v, p.delivered[k] ?? 0);
   const t = g.s.time;
   // A different operation, a new project, or a clock that went back (a load): start over.
-  const last = eta.hist[eta.hist.length - 1];
-  if (eta.game !== g || eta.project !== p.id || (last && t < last.t)) eta = { game: g, project: p.id, hist: [] };
-  const h = eta.hist;
+  const last = etaHist.hist[etaHist.hist.length - 1];
+  if (etaHist.game !== g || etaHist.project !== p.id || (last && t < last.t)) etaHist = { game: g, project: p.id, hist: [] };
+  const h = etaHist.hist;
   if (!h.length || t - h[h.length - 1].t >= ETA_SAMPLE) h.push({ t, got: { ...got } });
   // Keep one sample at or past the window's start: the window then always spans ETA_WINDOW once it can.
   while (h.length > 2 && t - h[1].t >= ETA_WINDOW) h.shift();
   const first = h[0];
   const span = t - first.t;
   const open = needs.filter(([k, v]) => got[k] < v);
-  if (!open.length) return { line: 'Complete!', dry: [], span };
-  if (needs.every(([k]) => got[k] === 0)) return { line: 'Not being fed yet', dry: [], span };
+  if (!open.length) return { ...none, note: 'Complete!', span };
+  if (needs.every(([k]) => got[k] === 0)) return { ...none, note: 'Not being fed yet', span };
   let slowest = 0;
   const dry: string[] = [];
+  const rates: Record<string, number> = {};
   for (const [k, v] of open) {
     const rate = span > 0 ? (got[k] - (first.got[k] ?? 0)) / span : 0;
-    if (rate > 0) slowest = Math.max(slowest, (v - got[k]) / rate);
-    else if (span >= ETA_SETTLE) dry.push(k);
+    if (rate > 0) {
+      slowest = Math.max(slowest, (v - got[k]) / rate);
+      rates[k] = rate * 60;
+    } else if (span >= ETA_SETTLE) dry.push(k);
   }
-  if (dry.length) {
-    const names = dry.map(itemShort);
-    const all = `No supply: ${names.join(', ')}`;
-    return { line: measureText(all) <= OBJECTIVES_W - 10 || dry.length === 1 ? all : `No supply: ${names[0]} +${dry.length - 1}`, dry, span };
-  }
-  // A good not timed yet (the samples are only seconds old) leaves no honest ETA to print.
-  if (slowest <= 0 || open.some(([k]) => got[k] === (first.got[k] ?? 0))) return { line: 'Timing the deliveries', dry: [], span };
-  return { line: `At this rate: ${duration(slowest)}`, dry: [], span };
+  if (dry.length) return { secs: 0, note: '', dry, span, rates };
+  // A good not timed yet (the samples are only seconds old) leaves no honest ETA to give.
+  if (slowest <= 0 || open.some(([k]) => got[k] === (first.got[k] ?? 0))) return { secs: 0, note: 'Timing the deliveries…', dry: [], span, rates };
+  return { secs: slowest, note: '', dry: [], span, rates };
 }
 
 /** "45 s", "2 min", "11 min 59 s", "1 h 05 min": whole units, floored, so 60 never shows. */
@@ -464,6 +663,10 @@ function duration(sec: number): string {
 
 /** The Stack column's width (UI px); it sits 3 px from the right edge. */
 export const STACK_W = 36;
+/** One layer's band and the 2 px of shaft under it. */
+const STACK_BAND = 22;
+/** An elevator readout under the Stack: its tier, then the rate down. */
+const SHAFT_BOX_H = 24;
 
 function stack(app: App): void {
   const ui = app.ui;
@@ -472,19 +675,19 @@ function stack(app: App): void {
   const w = STACK_W;
   const x = ui.w - w - 3;
   const y = 19;
-  const bandH = 22;
-  const h = 14 + LAYERS.length * bandH + 4;
+  const top = y + 16;
+  const h = 16 + LAYERS.length * STACK_BAND + 3;
   ui.panel(x, y, w, h);
-  ui.textCenter('STACK', x + w / 2, y + 3, C.steel2);
+  // Capitals at body spacing: tracked, STACK is 29 px and touches the well's lip in this 36 px column.
+  ui.textCenter('STACK', x + w / 2, y + 5, UIC.dim);
   for (let i = 0; i < LAYERS.length; i++) {
-    const by = y + 13 + i * bandH;
     const open = g.layer(i).open;
     const cur = i === app.layer;
     const def = LAYERS[i];
-    const r = { x: x + 2, y: by, w: w - 4, h: bandH - 2 };
-    // Band: the layer's colors as a strip of rock.
-    ui.fill(r.x, r.y, r.w, r.h, open ? def.wall[1] : C.night);
+    const r = { x: x + 4, y: top + i * STACK_BAND, w: w - 8, h: STACK_BAND - 2 };
     if (open) {
+      // The layer's colours as a strip of rock.
+      ui.fill(r.x, r.y, r.w, r.h, def.wall[1]);
       ui.fill(r.x, r.y + 3, r.w, r.h - 6, def.floor[cur ? 0 : 1]);
       // Activity dots: working machines.
       let n = 0;
@@ -493,13 +696,15 @@ function stack(app: App): void {
       // Power warning light.
       if (g.layer(i).power.sat < 0.99) ui.fill(r.x + r.w - 5, r.y + 4, 3, 3, Math.floor(app.time * 3) % 2 ? C.coral : C.crimson);
     } else {
-      ui.textCenter('?', x + w / 2, r.y + 6, C.slate);
+      // Not reached: a dark slot cut into the plate.
+      ui.inset(r.x, r.y, r.w, r.h, C.night);
+      ui.textCenter('?', r.x + r.w / 2, r.y + 6, C.slate);
     }
     if (cur) {
       ui.fill(r.x - 1, r.y - 1, r.w + 2, 1, C.pale);
       ui.fill(r.x - 1, r.y + r.h, r.w + 2, 1, C.pale);
-      ui.fill(r.x - 1, r.y - 1, 1, r.h + 2, C.pale);
-      ui.fill(r.x + r.w, r.y - 1, 1, r.h + 2, C.pale);
+      ui.fill(r.x - 1, r.y, 1, r.h, C.pale);
+      ui.fill(r.x + r.w, r.y, 1, r.h, C.pale);
     }
     // Shafts between bands: the cab position.
     const sh = s.shafts.find((q) => q.layers[0] === i);
@@ -509,9 +714,8 @@ function stack(app: App): void {
       const cy = r.y + r.h - 2 + Math.round(sh.pos * 4);
       ui.fill(sx - 2, cy, 4, 2, C.gold);
     }
-    const hov = ui.inside(r);
-    if (hov) {
-      ui.tooltip(open ? `${def.name} (${def.depth} m)\nClick to go there. [ and ] also switch layers.` : `${def.name}: not reached yet`);
+    if (ui.inside(r)) {
+      ui.tooltip(open ? `${def.name}, ${def.depth > 0 ? `${def.depth} m down` : 'on the surface'}\nClick to go there. [ and ] also switch layers.` : `${def.name}: not reached yet`);
       if (open && ui.input.pressed[0]) {
         app.setLayer(i);
         ui.used = true;
@@ -519,17 +723,16 @@ function stack(app: App): void {
     }
   }
   // Elevator traffic for the shafts touching the current layer: its tier and the live rate down.
-  const shafts = s.shafts.filter((q) => q.layers.includes(app.layer));
   let ty = y + h + 4;
-  for (const sh of shafts) {
+  for (const sh of s.shafts.filter((q) => q.layers.includes(app.layer))) {
     const t = shaftTraffic(g, sh.id);
-    const rate = Math.round(t.rate);
-    ui.panel(x, ty, w, 22);
-    ui.textCenter(`Mk${sh.tier + 1}`, x + w / 2, ty + 2, C.pale);
-    ui.textCenter(`${t.down}/m`, x + w / 2, ty + 12, t.full ? C.gold : C.steel3);
-    if (ui.hover(x, ty, w, 22)) {
-      let tip = `Elevator ${LAYERS[sh.layers[0]].short} - ${LAYERS[sh.layers[1]].short}, Mk${sh.tier + 1}`;
-      tip += `\nLast minute: down ${t.down}/${rate} (requests ${t.reqDown}, belts ${t.beltDown}), up ${t.up}/${rate}`;
+    ui.panel(x, ty, w, SHAFT_BOX_H, undefined, { frame: 'thin' });
+    const tier = `MK${sh.tier + 1}`;
+    ui.pill(tier, x + Math.floor(w / 2 - (measureText(tier) + 4) / 2), ty + 3, C.slate, UIC.text);
+    ui.rate(x + Math.round(w / 2 - rateWidth(t.down) / 2), ty + 13, t.down, t.full ? UIC.warn : UIC.text);
+    if (ui.hover(x, ty, w, SHAFT_BOX_H)) {
+      let tip = `Elevator ${LAYERS[sh.layers[0]].short} – ${LAYERS[sh.layers[1]].short}, Mk${sh.tier + 1}`;
+      tip += `\nDown ${rateText(t.down)} of ${Math.round(t.rate)} (requests ${t.reqDown}, belts ${t.beltDown}), up ${rateText(t.up)}, over the last minute`;
       if (t.full) tip += '\nThe cab is running full: lower a request, or upgrade the shaft.';
       // Belt cargo waiting at the top because the depot below is full of it (999 with what's on its way).
       const held = heldCargo(g, sh);
@@ -540,7 +743,7 @@ function stack(app: App): void {
       tip += '\nUpgrade it from either station.';
       ui.tooltip(tip);
     }
-    ty += 25;
+    ty += SHAFT_BOX_H + 4;
   }
 }
 
@@ -567,14 +770,26 @@ export function buildBarTop(): number {
 
 const BAR_BW = 36;
 const BAR_BH = 31;
+/** Between neighbouring buttons: 1 px of air between their outlines. */
 const BAR_GAP = 3;
-const TOOL_LABELS = ['Select', 'Remove', 'Dig', 'Survey'];
-/** The tool help line's room above the bar (UI px). */
-const HELP_ROOM = 16;
+const TAB_H = 12;
+const TOOL_H = 21;
+/** The tool help line: a 13 px strip, and its room above the bar with the outlines and a 2 px gap. */
+const HELP_H = 13;
+const HELP_ROOM = 18;
+
+type ToolKind = 'select' | 'remove' | 'dig' | 'survey';
+/** What the tutorial's current step points at (guideFocus). */
+type Focus = { building?: string; tab?: string; tool?: ToolKind; company?: boolean } | null;
+const TOOLS: { kind: ToolKind; label: string }[] = [
+  { kind: 'select', label: 'Select' },
+  { kind: 'remove', label: 'Remove' },
+  { kind: 'dig', label: 'Dig' },
+  { kind: 'survey', label: 'Survey' },
+];
 
 interface BarLayout {
   items: BuildingDef[];
-  tabLabels: string[];
   tabW: number;
   toolW: number;
   perRow: number;
@@ -598,26 +813,28 @@ function tabItems(app: App, category: string): BuildingDef[] {
  * Where the build bar goes this frame, without drawing it. Its size comes from the widest tab, not
  * the open one, so switching tabs moves nothing; the tabs don't depend on the layer shown either (only
  * on the deepest layer reached), so neither does switching layers. One row of buttons whenever the UI
- * is 620 px or wider (the auto scale keeps it at 640 or more); a narrower one wraps.
+ * is 640 px or wider (the auto scale keeps it there): 13 buildings and the tools fit in 628 px; a
+ * narrower one wraps.
  */
 function barLayout(app: App): BarLayout {
   const ui = app.ui;
   const items = tabItems(app, app.category);
   const most = Math.max(1, ...CATEGORIES.map((t) => tabItems(app, t.id).length));
-  const tabLabels = CATEGORIES.map((t) => `${t.key} ${t.name}`);
-  const tabW = Math.max(...tabLabels.map((l) => measureText(l))) + 8;
-  const toolW = Math.max(...TOOL_LABELS.map((l) => measureText(l))) + 8;
-  const toolsW = 2 * toolW + 2;
-  // As many buildings per row as fit beside the tools.
-  const maxRowW = Math.max(120, ui.w - 8 - toolsW - 10);
-  const perRow = Math.max(1, Math.min(most, Math.floor((maxRowW - 8 + BAR_GAP) / (BAR_BW + BAR_GAP))));
+  // A tab: its name centred beside its key cap. A tool: its icon, then its name.
+  const tabW = Math.max(...CATEGORIES.map((t) => measureText(t.name) + keyChipWidth(t.key) + 13));
+  const toolW = Math.max(...TOOLS.map((t) => 14 + measureText(t.label) + 4));
+  // 5 px inside the frame on each side, and 9 between the buildings and the tools for a rule.
+  const fixed = 5 + 9 + 2 * toolW + BAR_GAP + 5;
+  const maxRowW = Math.max(120, ui.w - 4 - fixed);
+  const perRow = Math.max(1, Math.min(most, Math.floor((maxRowW + BAR_GAP) / (BAR_BW + BAR_GAP))));
   const rows = Math.max(1, Math.ceil(most / perRow));
-  const rowW = Math.max(CATEGORIES.length * (tabW + 2) + 4, perRow * (BAR_BW + BAR_GAP) + 8 - BAR_GAP, 120);
-  const totalW = rowW + toolsW + 6;
+  const tabsW = CATEGORIES.length * (tabW + BAR_GAP) - BAR_GAP;
+  const rowW = Math.max(tabsW, perRow * (BAR_BW + BAR_GAP) - BAR_GAP, 120);
+  const totalW = rowW + fixed;
   const x0 = Math.floor(ui.w / 2 - totalW / 2);
-  const h = 19 + rows * (BAR_BH + BAR_GAP);
+  const h = 4 + TAB_H + 3 + rows * (BAR_BH + BAR_GAP) - BAR_GAP + 5;
   const y0 = ui.h - h - 2;
-  return { items, tabLabels, tabW, toolW, perRow, rowW, totalW, x0, y0, h };
+  return { items, tabW, toolW, perRow, rowW, totalW, x0, y0, h };
 }
 
 /**
@@ -628,68 +845,143 @@ export function barRoomTop(app: App): number {
   return barLayout(app).y0 - HELP_ROOM;
 }
 
-function buildBar(app: App): void {
+/**
+ * What the tutorial's current step wants used, so the HUD can point at it: the building a build step
+ * asks for (its slot, or its tab while another is open), the Dig or Survey tool, or the Company
+ * button for the line upgrade. A step that moves goods points at the Conveyor until the first belt
+ * is down. Nothing once the player has it in hand.
+ */
+function guideFocus(app: App): Focus {
+  const g = app.game!;
+  const st = currentStep(g);
+  if (!st) return null;
+  let building: string | null = null;
+  let tool: ToolKind | null = null;
+  if (st.kind === 'build') building = st.building;
+  else if (st.kind === 'dig' || st.kind === 'reach') tool = 'dig';
+  else if (st.kind === 'event' && st.event === 'surveyed') tool = 'survey';
+  else if (st.kind === 'event' && st.event === 'bore_site_reached') tool = 'dig';
+  else if (st.kind === 'event' && st.event === 'line_upgraded') return app.win === 'company' ? null : { company: true };
+  else if ((st.kind === 'produce' || st.kind === 'sell' || st.kind === 'deliver') && !hasBelt(g)) building = 'belt';
+  if (building) {
+    if (!g.canBuild(building) || (app.tool.kind === 'build' && app.tool.type === building)) return null;
+    const cat = BUILDINGS[building].category;
+    return cat === app.category ? { building } : { tab: cat };
+  }
+  if (tool && app.tool.kind !== tool) return { tool };
+  return null;
+}
+
+/** Has the player laid a Conveyor anywhere yet? */
+function hasBelt(g: Game): boolean {
+  for (const b of g.s.buildings.values()) if (b.type === 'belt') return true;
+  return false;
+}
+
+function buildBar(app: App, focus: Focus): void {
   const ui = app.ui;
   const g = app.game!;
-  const tabs = CATEGORIES;
-  const { items, tabLabels, tabW, toolW, perRow, rowW, totalW, x0, y0, h } = barLayout(app);
-  const bw = BAR_BW;
-  const bh = BAR_BH;
-  const gap = BAR_GAP;
+  const { items, tabW, toolW, perRow, rowW, totalW, x0, y0, h } = barLayout(app);
   // The tool help line sits just above the bar: panels that stack on the bar (Mags, the inspector) stop above it too.
-  const help = toolHelp(app);
+  const help = helpLine(app);
   barTop = help ? y0 - HELP_ROOM : y0;
   ui.panel(x0, y0, totalW, h);
-  // Category tabs.
-  tabs.forEach((t, i) => {
-    if (ui.button(x0 + 3 + i * (tabW + 2), y0 + 3, tabW, 10, tabLabels[i], { active: app.category === t.id, small: true })) app.category = t.id;
+  // Category tabs, each with its number key.
+  CATEGORIES.forEach((t, i) => {
+    const tx = x0 + 5 + i * (tabW + BAR_GAP);
+    if (ui.button(tx, y0 + 4, tabW, TAB_H, t.name, { active: app.category === t.id, key: t.key })) app.category = t.id;
+    if (focus?.tab === t.id) guideRing(app, tx, y0 + 4, tabW, TAB_H);
   });
   // Buildings in the category (an empty tab says why, in the row's place).
-  if (!items.length) ui.text('Nothing here yet: deeper layers bring more.', x0 + 6, y0 + 16 + Math.floor((bh - 7) / 2), C.steel2);
+  const sy = y0 + 4 + TAB_H + 3;
+  if (!items.length) ui.text('Nothing here yet: deeper layers bring more.', x0 + 6, sy + 12, UIC.dim);
   items.forEach((d, i) => {
-    const x = x0 + 4 + (i % perRow) * (bw + gap);
-    const y = y0 + 16 + Math.floor(i / perRow) * (bh + gap);
+    const x = x0 + 5 + (i % perRow) * (BAR_BW + BAR_GAP);
+    const y = sy + Math.floor(i / perRow) * (BAR_BH + BAR_GAP);
     const unlocked = g.canBuild(d.id);
     const active = app.tool.kind === 'build' && app.tool.type === d.id;
-    const clicked = ui.button(x, y, bw, 31, '', { active, disabled: !unlocked });
-    if (d.kind === 'belt') drawBeltIcon(app, d.id, x + 10, y + 7);
-    else {
-      ui.spriteCrop(`b_${d.id}`, x + 1, y + 1, bw - 2, 29, unlocked ? 1 : 0.3);
-    }
-    if (!unlocked) ui.image(iconCanvas('lock'), x + bw - 9, y + 2);
-    if (ui.hover(x, y, bw, 31)) ui.tooltip(buildTip(app, d.id));
+    const hov = ui.hover(x, y, BAR_BW, BAR_BH);
+    // The picture sinks with the button while it is held down.
+    const dy = hov && unlocked && ui.input.down[0] ? 1 : 0;
+    const clicked = ui.button(x, y, BAR_BW, BAR_BH, '', { active, disabled: !unlocked });
+    if (d.kind === 'belt') drawBeltIcon(app, d.id, x + 2, y + 7 + dy, unlocked);
+    else ui.spriteCrop(`b_${d.id}`, x + 1, y + 1 + dy, BAR_BW - 2, BAR_BH - 2, unlocked ? 1 : 0.3);
+    if (!unlocked) ui.image(iconCanvas('lock'), x + BAR_BW - 9, y + 2);
+    // Tips on the bar sit beside the button, never over it.
+    if (hov) ui.tooltipAt(buildTip(app, d.id), { x, y, w: BAR_BW, h: BAR_BH });
+    if (focus?.building === d.id) guideRing(app, x, y, BAR_BW, BAR_BH);
     if (clicked && unlocked) app.selectBuild(d.id);
   });
-  // Tools.
-  const tx = x0 + rowW + 4;
-  const toolH = Math.min(21, Math.floor((h - 8) / 2));
-  const tool = (i: number, label: string, kind: 'select' | 'remove' | 'dig' | 'survey', tip: string) => {
-    const x = tx + (i % 2) * (toolW + 2);
-    const y = y0 + 3 + Math.floor(i / 2) * (toolH + 2);
-    if (ui.button(x, y, toolW, toolH, label, { active: app.tool.kind === kind, tip })) app.tool = { kind } as App['tool'];
-  };
-  tool(0, 'Select', 'select', 'Select and inspect (Esc)');
-  tool(1, 'Remove', 'remove', 'Remove buildings: click or drag (X). Right-drag works in any mode. Full refund.');
+  // The tools, past an engraved rule: Dig and Survey show what they would do even where they can't.
+  const tx0 = x0 + 5 + rowW + 9;
+  ui.vr(tx0 - 5, y0 + 4, h - 9);
   const underground = app.layer > 0;
-  if (underground || g.layer(app.layer).terrain.some((t) => t === 1)) tool(2, 'Dig', 'dig', `Excavate rock: drag over it (E). $${LAYERS[app.layer].digCost} per tile.`);
-  if (underground) tool(3, 'Survey', 'survey', `Survey (F): reveals deposits and caverns within ${SURVEY_RADIUS} tiles through the dark. $${LAYERS[app.layer].surveyCost}.`);
-  // Current tool help line (not under a window that reaches down to it: its edge would cut the line).
-  const helpW = measureText(help) + 10;
-  const helpR = { x: Math.floor(ui.w / 2 - helpW / 2), y: y0 - 15, w: helpW, h: 12 };
-  if (help && !covered(app, helpR)) {
-    ui.panel(helpR.x, helpR.y, helpR.w, helpR.h, undefined, { alpha: 0.9 });
-    ui.textCenter(help, ui.w / 2, y0 - 13, C.steel3);
+  const rock = underground || g.layer(app.layer).terrain.some((t) => t === T_ROCK);
+  TOOLS.forEach((t, i) => {
+    const x = tx0 + (i % 2) * (toolW + BAR_GAP);
+    const y = y0 + 4 + Math.floor(i / 2) * (TOOL_H + 4);
+    const off = (t.kind === 'dig' && !rock) || (t.kind === 'survey' && !underground);
+    const active = app.tool.kind === t.kind;
+    if (ui.button(x, y, toolW, TOOL_H, t.label, { active, disabled: off, icon: toolIcon(t.kind) })) app.tool = { kind: t.kind };
+    if (ui.hover(x, y, toolW, TOOL_H)) ui.tooltipAt(toolTip(app, t.kind, off), { x, y, w: toolW, h: TOOL_H });
+    if (focus?.tool === t.kind && !off) guideRing(app, x, y, toolW, TOOL_H);
+  });
+  // The current tool's help line (not under a window that reaches down to it: its edge would cut the line).
+  if (help) {
+    const w = help.w + 12;
+    const r = { x: Math.floor(ui.w / 2 - w / 2), y: y0 - HELP_ROOM + 1, w, h: HELP_H };
+    if (!covered(app, r)) {
+      ui.panel(r.x, r.y, r.w, r.h, undefined, { alpha: 0.92 });
+      help.draw(r.x + 6, r.y + 3);
+    }
   }
 }
 
-function drawBeltIcon(app: App, type: string, x: number, y: number): void {
-  // A short run of belt as the icon.
+/** What a tool does and its key, for its button. A tool that can't work here says why. */
+function toolTip(app: App, kind: ToolKind, off: boolean): string {
+  const def = LAYERS[app.layer];
+  switch (kind) {
+    case 'select':
+      return 'Select (Esc)\nClick a building to see what it makes, what it needs and what is wrong. Esc or a right-click brings you back here from any tool.';
+    case 'remove':
+      return 'Remove (X)\nClick a building, or drag a box over several, to take them down. Everything goes back to the depot, and Ctrl+Z puts the last removal back. Holding the right button on a building for half a second removes it too, in any tool but Dig.';
+    case 'dig':
+      if (off) return 'Dig (E)\nNo rock left to dig on the Surface. Below, the Dig tool cuts tunnels through the rock.';
+      return `Dig (E)\nExcavate rock: drag over it and the crew digs it out, $${def.digCost} a tile. Tunnel to deposits and caves, or clear room to build. A right-drag over queued digging cancels it.`;
+    case 'survey':
+      if (off) return 'Survey (F)\nWorks underground: the Surface is in plain sight. Below, a survey shows deposits and caves through the dark.';
+      return `Survey (F)\nClick a spot in the dark: deposits and caves within ${SURVEY_RADIUS} tiles show through the rock. $${def.surveyCost} a survey.`;
+  }
+}
+
+/**
+ * The tools' icons, all 8 x 8 so the labels after them line up: a pointer for Select, a red cross
+ * for Remove, a pickaxe for Dig, an eye for Survey. Each reads on the raised face and the amber one.
+ */
+function toolIcon(kind: ToolKind): HTMLCanvasElement {
+  switch (kind) {
+    case 'select':
+      return pixelIcon('tool_select', ['w.......', 'ww......', 'www.....', 'wwww....', 'wwwww...', 'www.....', 'w.ww....', '...ww...'], { w: C.white });
+    case 'remove':
+      return pixelIcon('tool_remove', ['........', 'c.....c.', 'cr...cr.', '.cr.cr..', '..crr...', '.cr.cr..', 'cr...cr.', 'r.....r.'], { c: C.coral, r: C.red });
+    case 'dig':
+      return pixelIcon('tool_dig', ['........', '..sss...', '.sttss..', 's..dhts.', '..dh..ts', '.dh....s', 'dh......', 'h.......'], { s: C.silver, t: C.steel3, d: C.earth1, h: C.earth2 });
+    case 'survey':
+      return pixelIcon('tool_survey', ['........', '........', '..www...', '.wcccw..', 'wcckccw.', '.wcccw..', '..www...', '........'], { w: C.white, c: C.cyan, k: C.ink });
+  }
+}
+
+/**
+ * A belt's slot picture: two tiles of the real belt (render/belts.ts) running east at the belt's own
+ * speed, so the slot looks like what it lays and shows that a belt runs one way.
+ */
+function drawBeltIcon(app: App, type: string, x: number, y: number, unlocked: boolean): void {
   const ui = app.ui;
-  ui.fill(x - 2, y + 2, 20, 14, C.ink);
-  ui.fill(x - 1, y + 3, 18, 12, type === 'express_belt' ? C.blue1 : type === 'insulated_belt' ? C.rust1 : C.panel2);
-  ui.fill(x, y + 5, 16, 8, C.panel);
-  const off = Math.floor(app.time * 16) % 4;
-  for (let k = 0; k < 4; k++) ui.fill(x + ((k * 4 + off) % 16), y + 5, 1, 8, type === 'express_belt' ? C.cyan : C.steel);
+  const tile = beltTile(type, 1, 'S', beltFrame(Math.floor(app.time * 60), BUILDINGS[type].speed ?? 1.5));
+  ui.ctx.globalAlpha = unlocked ? 1 : 0.3;
+  ui.image(tile, x, y);
+  ui.image(tile, x + TILE, y);
+  ui.ctx.globalAlpha = 1;
 }
 
 function costLine(app: App, cost: Record<string, number>): string {
@@ -731,23 +1023,113 @@ export function unlockText(key: string): string {
   return key;
 }
 
-function toolHelp(app: App): string {
+// ------------------------------------------------------------------ the tool help line
+
+/** A placement's facing (app.dir, 0 north to 3 west) as an arrow and a word. */
+const DIR_ARROW = ['↑', '→', '↓', '←'];
+const DIR_NAME = ['north', 'east', 'south', 'west'];
+/** Pieces a drag lays as a line (app.ts LINE_TYPES, less the Foundation's rectangle). */
+const DRAG_LINE = new Set(['belt', 'express_belt', 'insulated_belt', 'shield_wall', 'lamp']);
+
+/**
+ * What R turns on a building: the way a belt piece runs, or the face a machine's output leaves by.
+ * Null for one whose facing changes nothing (a Lamp, a wall, a generator).
+ */
+function facing(type: string): 'runs' | 'output' | null {
+  const k = BUILDINGS[type]?.kind;
+  if (k === 'belt' || k === 'splitter' || k === 'sorter') return 'runs';
+  if (k === 'miner' || k === 'collector' || k === 'unloader' || k === 'crate' || k === 'sequencer') return 'output';
+  if (k === 'machine') return Object.values(RECIPES).some((r) => r.machine === type && Object.keys(r.outputs).length > 0) ? 'output' : null;
+  return null;
+}
+
+/** One piece of a help line: its width, and how to draw it with its text's top at (x, y). */
+interface Seg {
+  w: number;
+  draw: (x: number, y: number) => void;
+}
+
+/** Between two pieces: a dim dot with 4 px either side. */
+const SEP_W = 9;
+
+/** The help line's pieces for the current tool, laid end to end with dots between; null for Select. */
+function helpLine(app: App): { w: number; draw: (x: number, y: number) => void } | null {
+  const ui = app.ui;
+  const name = (s: string): Seg => ({ w: measureText(s, 'head'), draw: (x, y) => ui.head(s, x, y, UIC.text) });
+  const text = (s: string, color: string = UIC.soft): Seg => ({ w: measureText(s), draw: (x, y) => ui.text(s, x, y, color) });
+  const key = (k: string, s: string): Seg => ({ w: keyHintWidth(k, s), draw: (x, y) => ui.keyHint(k, s, x, y, UIC.soft) });
+  const mouse = (b: 'left' | 'right', s: string): Seg => ({
+    w: 10 + measureText(s),
+    draw: (x, y) => {
+      ui.mouseChip(b, x, y);
+      ui.text(s, x + 10, y, UIC.soft);
+    },
+  });
+  const cost = (amount: number, s: string): Seg => {
+    const m = money(amount);
+    return { w: measureText(m) + 1 + measureText(s), draw: (x, y) => ui.text(s, x + ui.text(m, x, y, UIC.money), y, UIC.soft) };
+  };
+  // "[R] runs → east": the key, then which way, the arrow lit so it reads at a glance.
+  const turn = (how: 'runs' | 'output'): Seg => {
+    const arrow = DIR_ARROW[app.dir];
+    const dir = DIR_NAME[app.dir];
+    const kw = keyChipWidth('R') + 3;
+    return {
+      w: kw + measureText(how) + 4 + measureText(arrow) + 4 + measureText(dir),
+      draw: (x, y) => {
+        ui.keyChip('R', x, y);
+        let cx = x + kw;
+        cx += ui.text(how, cx, y, UIC.soft) + 3;
+        cx += ui.text(arrow, cx, y, UIC.title) + 3;
+        ui.text(dir, cx, y, UIC.soft);
+      },
+    };
+  };
+  // The right button is named in words as well as lit on the mouse: it used to remove, and the lit
+  // corner alone is too small to tell from the left one.
+  const cancel = mouse('right', 'right-click to cancel');
   const t = app.tool;
+  let segs: Seg[];
   switch (t.kind) {
     case 'build': {
       const d = BUILDINGS[t.type];
-      if (d.kind === 'belt') return `${d.name}: drag to lay a line. R rotates. Right-click cancels.`;
-      if (t.type === 'foundation') return 'Foundation: drag a rectangle. Right-click cancels.';
-      return `${d.name}: click to place. R rotates the output. Right-click cancels.`;
+      if (t.type === 'foundation') segs = [name(d.name), mouse('left', 'drag a rectangle'), cancel];
+      else {
+        segs = [name(d.name), mouse('left', d.kind === 'belt' ? 'drag to lay a line' : DRAG_LINE.has(t.type) ? 'click, or drag a line' : 'click to place')];
+        // "[R] runs ↓ south" names the facing with its arrow, as the ghost shows it.
+        const how = facing(t.type);
+        if (how) segs.push(turn(how));
+        segs.push(cancel);
+      }
+      break;
     }
     case 'remove':
-      return 'Remove: click or drag a box. Everything is refunded to the depot.';
+      segs = [name('Remove'), mouse('left', 'click, or drag a box'), text('refunded to the depot'), key('Ctrl+Z', 'undo'), cancel];
+      break;
     case 'dig':
-      return `Excavate: drag over rock. $${LAYERS[app.layer].digCost} per tile. Right-drag cancels.`;
+      segs = [name('Dig'), mouse('left', 'drag over rock to excavate it'), cost(LAYERS[app.layer].digCost, ' a tile'), cancel];
+      break;
     case 'survey':
-      return `Survey: click a spot. Reveals deposits within ${SURVEY_RADIUS} tiles. $${LAYERS[app.layer].surveyCost}.`;
+      segs = [name('Survey'), mouse('left', `click a spot: ore and caves within ${SURVEY_RADIUS} tiles show`), cost(LAYERS[app.layer].surveyCost, ' a survey'), cancel];
+      break;
+    default:
+      return null;
   }
-  return '';
+  const w = segs.reduce((a, s) => a + s.w, 0) + (segs.length - 1) * SEP_W;
+  return {
+    w,
+    draw: (x, y) => {
+      let cx = x;
+      segs.forEach((s, i) => {
+        if (i > 0) {
+          ui.text('·', cx + 4, y, UIC.dim);
+          cx += SEP_W;
+        }
+        s.draw(cx, y);
+        cx += s.w;
+      });
+    },
+  };
 }
 
 // ------------------------------------------------------------------ radio and toasts
@@ -756,30 +1138,33 @@ function radio(app: App): void {
   const ui = app.ui;
   if (!app.radio.length) return;
   const msg = app.radio[0];
-  const w = 210;
-  const lines = wrapText(msg.text, w - 62);
-  // Text from y+14, then a row for the button.
-  const h = Math.max(56, 14 + lines.length * LINE_H + 16);
+  const w = 214;
   const x = 4;
+  // The text column, right of the portrait's slot.
+  const tx = x + 61;
+  const tw = x + w - 5 - tx;
+  const lines = wrapText(msg.text, tw);
+  // The name at y + 5, the text from y + 17, then the button's row.
+  const h = Math.max(60, 17 + lines.length * LINE_H + 19);
   const y = (barTop || ui.h - 54) - 4 - h;
   // Under a window the message waits, unread time not counted: the window's edge would cut it.
   if (covered(app, { x, y, w, h })) return;
   // Real seconds, whatever the display's frame rate.
   msg.t += app.dt;
   ui.panel(x, y, w, h);
+  ui.inset(x + 4, y + 4, 52, 52, C.night);
   if (msg.who === 'mags') {
-    ui.fill(x + 3, y + 3, 50, 50 > h - 6 ? h - 6 : 50, C.night);
-    ui.sprite('p_mags', x + 4, y + 4);
-    ui.text('MAGS', x + 58, y + 3, C.gold);
+    ui.sprite('p_mags', x + 6, y + 6);
+    ui.section('Mags', tx, y + 5, tw, { color: UIC.head });
   } else {
-    ui.text('THE BOARD', x + 58, y + 3, C.steel2);
-    ui.image(iconCanvas('contract'), x + 22, y + 18);
+    ui.image(iconCanvas('contract'), x + 27, y + 27);
+    ui.section('The Board', tx, y + 5, tw, { color: UIC.soft });
   }
-  lines.forEach((l, i) => ui.text(l, x + 58, y + 14 + i * LINE_H, C.white));
-  const more = app.radio.length > 1 ? `${app.radio.length - 1} more` : 'OK';
-  // As wide as its label ("5 more" is 32 px), its right edge 3 px in from the panel's.
-  const bw = Math.max(31, measureText(more) + 8);
-  if (ui.button(x + w - 3 - bw, y + h - 13, bw, 10, more, { tip: 'Next message' })) app.radio.shift();
+  lines.forEach((l, i) => ui.text(l, tx, y + 17 + i * LINE_H, UIC.text));
+  const more = app.radio.length > 1 ? `Next (${app.radio.length - 1} more)` : 'OK';
+  // As wide as its label, its right edge on the text column's.
+  const bw = Math.max(30, measureText(more) + 10);
+  if (ui.button(x + w - 5 - bw, y + h - 17, bw, 12, more, { tip: app.radio.length > 1 ? 'Next message' : 'Done' })) app.radio.shift();
   // Auto-advance long-read messages.
   if (msg.t > 14 + lines.length * 2) app.radio.shift();
 }
@@ -790,33 +1175,44 @@ function toasts(app: App): void {
   const list = app.toasts.map((t) => ({ text: t.text, kind: t.kind, alpha: Math.min(1, (4.5 - t.t) * 2) }));
   if (!list.length) return;
   ui.late(() => {
-    let y = 19;
+    const ctx = ui.ctx;
+    const box = (x: number, y: number, w: number, h: number, color: string) => {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+    };
+    // A long toast wraps to the gap between the objectives and the Stack or the inspector, instead of
+    // running over the inspector's lines for its few seconds.
+    const { left, right } = topGap(app);
+    const room = Math.max(140, right - left - 19);
+    let y = app.paused ? PAUSED_Y + PAUSED_H + 5 : PAUSED_Y;
     for (const t of list) {
-      const w = measureText(t.text) + 12;
-      const x = Math.floor(ui.w / 2 - w / 2);
-      const col = t.kind === 'good' ? C.lime : t.kind === 'bad' ? C.coral : C.cyan;
+      const col = t.kind === 'good' ? UIC.good : t.kind === 'bad' ? UIC.bad : UIC.power;
+      const mark = t.kind === 'good' ? '✓' : t.kind === 'bad' ? '!' : '•';
+      // A mark in its colour on a strip of it, then the text: what happened reads before what it says.
+      const lines = wrapText(t.text, room);
+      const w = 13 + Math.max(...lines.map((l) => measureText(l))) + 6;
+      const h = 3 + lines.length * LINE_H;
+      const x = gapX(app, w);
       // ui.fill and ui.text set their own alpha, so draw straight to the context at the toast's fade.
-      const ctx = ui.ctx;
       ctx.globalAlpha = t.alpha;
-      ctx.fillStyle = C.ink;
-      ctx.fillRect(x - 1, y - 1, w + 2, 13);
-      ctx.fillStyle = C.panel2;
-      ctx.fillRect(x, y, w, 11);
-      ctx.fillStyle = col;
-      ctx.fillRect(x, y, 2, 11);
-      drawText(ctx, t.text, x + 7, y + 2, C.white);
+      box(x - 1, y - 1, w + 2, h + 2, C.ink);
+      box(x, y, w, h, C.panel);
+      box(x, y, w - 1, 1, C.steel);
+      box(x, y + 1, 1, h - 2, C.steel);
+      box(x + 1, y + h - 1, w - 1, 1, C.panel2);
+      box(x + w - 1, y, 1, h - 1, C.panel2);
+      box(x + 1, y + 1, 9, h - 2, C.panel2);
+      box(x + 1, y + 1, 1, h - 2, col);
+      drawText(ctx, mark, x + 6 - Math.floor(measureText(mark) / 2), y + 3, col);
+      lines.forEach((l, i) => drawText(ctx, l, x + 13, y + 3 + i * LINE_H, UIC.text));
       ctx.globalAlpha = 1;
-      y += 14;
+      y += h + 4;
     }
   });
 }
 
 // ------------------------------------------------------------------ breakthrough card
 
-/**
- * The new layer's card. It ages here, as it is drawn: under a window it waits, its seconds not
- * counted, so it never runs out unseen (app.ts drops it after 5 s).
- */
 /** The layer card's box (UI px): centred, a little above the middle of the screen. */
 function layerCardRect(app: App): Rect {
   const ui = app.ui;
@@ -826,8 +1222,9 @@ function layerCardRect(app: App): Rect {
 }
 
 /**
- * A layer's card: a gold header over the layer's name and a line about it, between two gold rules on
- * an ink band, at alpha `a`. The breakthrough card, and the ending's climb names each layer with it.
+ * A layer's card: a header over the layer's name, stamped in the heading style, and a line about it,
+ * between two gold rules on an ink band, at alpha `a`. The breakthrough card, and the ending's climb
+ * names each layer with it.
  */
 export function drawLayerCard(app: App, header: string, name: string, line: string, a: number): void {
   if (a <= 0) return;
@@ -835,22 +1232,29 @@ export function drawLayerCard(app: App, header: string, name: string, line: stri
   const { x, y, w, h } = layerCardRect(app);
   // ui.fill sets (and resets) the alpha itself; the text takes it from the context.
   ui.fill(x, y, w, h, C.ink, 0.85 * a);
+  // Each rule has its shadow under it, like the edge of a brass plate.
   ui.fill(x, y, w, 1, C.gold, a);
-  ui.fill(x, y + h - 1, w, 1, C.gold, a);
+  ui.fill(x, y + 1, w, 1, C.rust0, a);
+  ui.fill(x, y + h - 2, w, 1, C.gold, a);
+  ui.fill(x, y + h - 1, w, 1, C.rust0, a);
   ui.ctx.globalAlpha = a;
-  ui.textCenter(header, ui.w / 2, y + 5, C.gold);
-  ui.textCenter(name, ui.w / 2, y + 17, C.white);
-  ui.textCenter(line, ui.w / 2, y + 30, C.steel3);
+  ui.textCenter(header, ui.w / 2, y + 6, UIC.head, undefined, 'head');
+  ui.textCenter(name, ui.w / 2, y + 18, UIC.text, C.ink, 'head');
+  ui.textCenter(line, ui.w / 2, y + 31, UIC.soft);
   ui.ctx.globalAlpha = 1;
 }
 
+/**
+ * The new layer's card. It ages here, as it is drawn: under a window it waits, its seconds not
+ * counted, so it never runs out unseen (app.ts drops it after 5 s).
+ */
 function breakthroughCard(app: App): void {
   const c = app.card!;
   const def = LAYERS[c.layer];
   if (covered(app, layerCardRect(app))) return;
   c.t += app.dt;
   const a = c.t < 0.5 ? c.t / 0.5 : c.t > 4 ? Math.max(0, (5 - c.t) / 1) : 1;
-  drawLayerCard(app, 'BREAKTHROUGH', def.name.toUpperCase(), def.subtitle, a);
+  drawLayerCard(app, 'Breakthrough', def.name, def.subtitle, a);
 }
 
 // ------------------------------------------------------------------ hover info
@@ -870,7 +1274,7 @@ function hoverInfo(app: App, camX: number, camY: number): void {
     else if (chk.planned && chk.missing) t += `\nPlanned: depot needs ${Object.entries(chk.missing).map(([k, v]) => `${v} more ${ITEMS[k].name}`).join(', ')}`;
     if (d.needsDeposit && chk.ok) {
       const info = g.minerInfo(app.layer, a.x, a.y, d);
-      if (info.ore) t += `\n${ITEMS[info.ore].name} (${PURITY_NAME[info.purity] ?? 'normal'}): ${Math.round(info.rate * 60)}/min`;
+      if (info.ore) t += `\n${ITEMS[info.ore].name} (${PURITY_NAME[info.purity] ?? 'normal'}): ${rateText(info.rate * 60)}`;
     }
     if (chk.ok && (d.kind === 'machine' || d.kind === 'miner' || d.kind === 'collector' || d.kind === 'tap')) {
       const p = predictPlacement(g, app.tool.type, app.layer, a.x, a.y);
@@ -880,6 +1284,9 @@ function hoverInfo(app: App, camX: number, camY: number): void {
         t += `\nWould run at ${Math.round(p.mul * 100)}%${why ? ` (${why})` : ''}`;
       }
     }
+    // Which way it faces, beside the ghost where the eye already is.
+    const how = facing(app.tool.type);
+    if (how) t += `\n${how === 'runs' ? 'Runs' : 'Output'} ${DIR_ARROW[app.dir]} ${DIR_NAME[app.dir]} (R turns it)`;
     // Beside the ghost's footprint, above and to its right, so it never covers what it describes.
     const s = app.uiScale();
     const z = app.zoom;
@@ -911,6 +1318,9 @@ function hoverInfo(app: App, camX: number, camY: number): void {
       );
     } else if (L.revealed[i] && L.conduit[i]) {
       ui.tooltip(L.conduitLive[i] ? "Awake conduit: a machine with two tiles on it runs on the nodes' power, not the grid." : 'Dormant conduit: each Heartstone an Engine Node makes wakes the conduit a ring further out.');
+    } else if (L.revealed[i] && L.terrain[i] === T_ROCK && app.tool.kind === 'select' && g.s.stats.dug === 0) {
+      // Until the first dig, rock says that it can be dug: nothing else on the map does.
+      ui.tooltip(`Rock\nThe Dig tool (E) excavates it: drag over rock, $${LAYERS[app.layer].digCost} a tile.`);
     }
     return;
   }
@@ -925,8 +1335,8 @@ function hoverInfo(app: App, camX: number, camY: number): void {
     if (jam) t += `\nJammed: ${jam}`;
     else {
       t += `\n${statusText(b.status)}`;
-      if (b.recipe && RECIPES[b.recipe]) t += ` - ${RECIPES[b.recipe].name}`;
-      if (b.ore && d.kind !== 'machine') t += ` - ${ITEMS[b.ore].name}`;
+      if (b.recipe && RECIPES[b.recipe]) t += ` · ${RECIPES[b.recipe].name}`;
+      if (b.ore && d.kind !== 'machine') t += ` · ${ITEMS[b.ore].name}`;
     }
   } else if (d.kind === 'drill' || d.kind === 'heart') {
     const jam = projectJamText(b);
@@ -938,7 +1348,11 @@ function hoverInfo(app: App, camX: number, camY: number): void {
   if (b.item) t += `\nCarrying ${ITEMS[b.item.id]?.name ?? b.item.id}`;
   const headOn = headOnText(g, b);
   if (headOn) t += `\n${headOn}`;
+  // What a click and the keys do here, in the tool in hand: with Remove a click takes it down.
   const turns = !d.fixed || (d.kind === 'elevator' && b.end === 0);
-  t += `\nClick for details.${turns ? ' R rotates' : ''}${turns && !d.fixed ? ', Q copies.' : turns ? '.' : ''}`;
+  const keys = `${turns ? 'R rotates' : ''}${turns && !d.fixed ? ', Q copies' : ''}`;
+  if (app.tool.kind === 'remove') t += d.fixed ? '\nFixed in place: it can\'t be removed.' : '\nClick to remove it: refunded to the depot, Ctrl+Z puts it back.';
+  else if (app.tool.kind === 'select') t += `\nClick for details.${keys ? ` ${keys}.` : ''}`;
+  else if (keys) t += `\n${keys}.`;
   ui.tooltip(t);
 }
